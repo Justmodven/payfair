@@ -162,6 +162,10 @@ const Icon = ({name,size=20,color=C.textSec}) => {
     zap:<svg {...p}><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg>,
     trending:<svg {...p}><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>,
     layers:<svg {...p}><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>,
+    calendar:<svg {...p}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+    poll:<svg {...p}><path d="M18 20V10M12 20V4M6 20v-6"/></svg>,
+    clock:<svg {...p}><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>,
+    mapPin:<svg {...p}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
   };
   return m[name]||null;
 };
@@ -349,6 +353,33 @@ function App() {
   const [notifPay,setNotifPay] = useState(true);
   const [alertPrefs,setAlertPrefs] = useState({email:true,sms:false,push:true});
 
+  // Calendar state
+  const [calEvents,setCalEvents] = useState([
+    {id:"ev1",title:"Frostbite Classic Tournament",date:"2026-03-14",time:"7:00 AM",endDate:"2026-03-16",location:"IceWorks Rink, Aston PA",type:"tournament",notes:"Full team required. Arrive 45 min early."},
+    {id:"ev2",title:"Practice — Power Play Drills",date:"2026-03-10",time:"6:30 PM",location:"Twin Ponds East",type:"practice",notes:""},
+    {id:"ev3",title:"Team Dinner — Season Kickoff",date:"2026-03-08",time:"6:00 PM",location:"Olive Garden, Route 30",type:"event",notes:"Families welcome. RSVP via poll."},
+    {id:"ev4",title:"Practice — Breakout Passing",date:"2026-03-12",time:"6:30 PM",location:"Twin Ponds East",type:"practice",notes:""},
+    {id:"ev5",title:"Away Game vs. Flyers Elite",date:"2026-03-20",time:"5:00 PM",location:"Virtua Center, Mt. Laurel NJ",type:"game",notes:"Bus departs 3:15 PM from Twin Ponds."},
+  ]);
+  const [calModal,setCalModal] = useState(false);
+  const [editEvent,setEditEvent] = useState(null);
+  const [evTitle,setEvTitle] = useState("");
+  const [evDate,setEvDate] = useState("");
+  const [evTime,setEvTime] = useState("");
+  const [evLocation,setEvLocation] = useState("");
+  const [evType,setEvType] = useState("practice");
+  const [evNotes,setEvNotes] = useState("");
+
+  // Poll state
+  const [polls,setPolls] = useState([
+    {id:"p1",question:"Team dinner restaurant preference?",options:[{text:"Olive Garden",votes:12},{text:"Chipotle",votes:5},{text:"Chick-fil-A",votes:8}],active:true,voted:false,totalVoters:25,createdAt:"2026-03-05"},
+    {id:"p2",question:"Charter bus for Frostbite Classic? ($45/family)",options:[{text:"Yes — charter bus",votes:16},{text:"No — we'll drive",votes:6}],active:true,voted:false,totalVoters:22,createdAt:"2026-03-04"},
+    {id:"p3",question:"Preferred practice time next month?",options:[{text:"6:00 PM",votes:10},{text:"6:30 PM",votes:8},{text:"7:00 PM",votes:4}],active:false,voted:true,totalVoters:22,createdAt:"2026-02-28"},
+  ]);
+  const [pollModal,setPollModal] = useState(false);
+  const [pollQuestion,setPollQuestion] = useState("");
+  const [pollOptions,setPollOptions] = useState(["",""]);
+
   // Computed
   const perFamily = parseInt(fundAmt||"0");
   const totalFund = perFamily * (roster.length || 8);
@@ -405,6 +436,46 @@ function App() {
     const file = e.target.files[0];
     if(file){const reader=new FileReader();reader.onloadend=()=>setter(reader.result);reader.readAsDataURL(file);}
   };
+
+  // Calendar helpers
+  const openNewEvent = () => {
+    setEditEvent(null);setEvTitle("");setEvDate("");setEvTime("");setEvLocation("");setEvType("practice");setEvNotes("");setCalModal(true);
+  };
+  const openEditEvent = (ev) => {
+    setEditEvent(ev);setEvTitle(ev.title);setEvDate(ev.date);setEvTime(ev.time);setEvLocation(ev.location||"");setEvType(ev.type);setEvNotes(ev.notes||"");setCalModal(true);
+  };
+  const saveEvent = () => {
+    if(!evTitle||!evDate) return;
+    const data = {title:evTitle,date:evDate,time:evTime,location:evLocation,type:evType,notes:evNotes};
+    if(editEvent) {
+      setCalEvents(prev=>prev.map(e=>e.id===editEvent.id?{...e,...data}:e));
+    } else {
+      setCalEvents(prev=>[...prev,{id:"ev"+Date.now(),...data}]);
+    }
+    setCalModal(false);
+  };
+  const deleteEvent = (id) => setCalEvents(prev=>prev.filter(e=>e.id!==id));
+
+  const sortedEvents = [...calEvents].sort((a,b)=>a.date.localeCompare(b.date));
+  const eventTypeColor = t => ({practice:C.cyan,game:C.accent,tournament:C.orange,event:C.steel}[t]||C.textMuted);
+  const eventTypeLabel = t => ({practice:"Practice",game:"Game",tournament:"Tournament",event:"Event"}[t]||t);
+  const fmtEventDate = d => {try{return new Date(d+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});}catch(e){return d;}};
+
+  // Poll helpers
+  const createPoll = () => {
+    const opts = pollOptions.filter(o=>o.trim());
+    if(!pollQuestion||opts.length<2) return;
+    setPolls(prev=>[{id:"p"+Date.now(),question:pollQuestion,options:opts.map(t=>({text:t,votes:0})),active:true,voted:false,totalVoters:0,createdAt:new Date().toISOString().slice(0,10)},...prev]);
+    setPollQuestion("");setPollOptions(["",""]);setPollModal(false);
+  };
+  const votePoll = (pollId,optIdx) => {
+    setPolls(prev=>prev.map(p=>{
+      if(p.id!==pollId||p.voted) return p;
+      const opts = p.options.map((o,i)=>i===optIdx?{...o,votes:o.votes+1}:o);
+      return {...p,options:opts,voted:true,totalVoters:p.totalVoters+1};
+    }));
+  };
+  const closePoll = (pollId) => setPolls(prev=>prev.map(p=>p.id===pollId?{...p,active:false}:p));
 
   // ═══ LANDING ═══
   if(screen==="landing") return (
@@ -812,6 +883,117 @@ function App() {
           </div>
         )}
 
+        {mTab==="calendar"&&(
+          <div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+              <div style={{fontWeight:800,fontSize:17}}>Team Calendar</div>
+              <Btn variant="accent" small onClick={openNewEvent}><Icon name="plus" size={14} color={C.navy}/> New Event</Btn>
+            </div>
+            {sortedEvents.length===0&&<Card style={{textAlign:"center",padding:32,color:C.textMuted}}><Icon name="calendar" size={32} color={C.border}/><div style={{marginTop:12,fontWeight:600}}>No events yet</div></Card>}
+            {sortedEvents.map(ev=>(
+              <Card key={ev.id} style={{marginBottom:8,padding:"14px 16px",cursor:"pointer",borderLeft:`4px solid ${eventTypeColor(ev.type)}`}} onClick={()=>openEditEvent(ev)}>
+                <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
+                  <div style={{width:44,minHeight:44,borderRadius:10,background:`${eventTypeColor(ev.type)}15`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",flexShrink:0,padding:"4px 0"}}>
+                    <div style={{fontSize:10,fontWeight:700,color:eventTypeColor(ev.type),textTransform:"uppercase"}}>{fmtEventDate(ev.date).split(" ")[0]}</div>
+                    <div style={{fontSize:18,fontWeight:900,color:eventTypeColor(ev.type),lineHeight:1}}>{ev.date.split("-")[2]}</div>
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+                      <div style={{fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.title}</div>
+                      <Badge label={eventTypeLabel(ev.type)} color={eventTypeColor(ev.type)} bg={`${eventTypeColor(ev.type)}15`}/>
+                    </div>
+                    <div style={{fontSize:12,color:C.textMuted,fontWeight:500,display:"flex",alignItems:"center",gap:6}}>
+                      {ev.time&&<><Icon name="clock" size={11} color={C.textMuted}/> {ev.time}</>}
+                      {ev.location&&<><span style={{color:C.border}}>·</span><Icon name="mapPin" size={11} color={C.textMuted}/> {ev.location}</>}
+                    </div>
+                    {ev.notes&&<div style={{fontSize:12,color:C.textSec,marginTop:4,fontWeight:500}}>{ev.notes}</div>}
+                  </div>
+                  <div style={{display:"flex",gap:4,flexShrink:0}}>
+                    <div onClick={e=>{e.stopPropagation();deleteEvent(ev.id)}} style={{width:28,height:28,borderRadius:6,background:C.redBg,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}><Icon name="x" size={13} color={C.red}/></div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+
+            <Modal open={calModal} onClose={()=>setCalModal(false)}>
+              <h3 style={{...T.h3,margin:"0 0 20px"}}>{editEvent?"Edit Event":"New Event"}</h3>
+              <Input label="Title" value={evTitle} onChange={setEvTitle} placeholder="e.g. Practice — Breakout Passing"/>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <Input label="Date" value={evDate} onChange={setEvDate} type="date"/>
+                <Input label="Time" value={evTime} onChange={setEvTime} placeholder="6:30 PM"/>
+              </div>
+              <Input label="Location" value={evLocation} onChange={setEvLocation} placeholder="Twin Ponds East" icon={<Icon name="mapPin" size={16} color={C.textMuted}/>}/>
+              <div style={{marginBottom:18}}>
+                <label style={{...T.label,display:"block",marginBottom:8,fontSize:11}}>Type</label>
+                <div style={{display:"flex",gap:6}}>
+                  {["practice","game","tournament","event"].map(t=>(
+                    <button key={t} onClick={()=>setEvType(t)} style={{flex:1,padding:"10px 0",border:`1.5px solid ${evType===t?eventTypeColor(t):C.border}`,borderRadius:8,background:evType===t?`${eventTypeColor(t)}15`:"transparent",color:evType===t?eventTypeColor(t):C.textSec,fontWeight:700,fontSize:12,cursor:"pointer",textTransform:"capitalize"}}>{t}</button>
+                  ))}
+                </div>
+              </div>
+              <Input label="Notes (optional)" value={evNotes} onChange={setEvNotes} placeholder="Arrive early, bring gear..." multiline/>
+              <Btn full onClick={saveEvent} disabled={!evTitle||!evDate}><Icon name="check" size={15} color={C.white}/> {editEvent?"Save Changes":"Create Event"}</Btn>
+            </Modal>
+          </div>
+        )}
+
+        {mTab==="polls"&&(
+          <div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+              <div style={{fontWeight:800,fontSize:17}}>Team Polls</div>
+              <Btn variant="accent" small onClick={()=>setPollModal(true)}><Icon name="plus" size={14} color={C.navy}/> New Poll</Btn>
+            </div>
+            {polls.length===0&&<Card style={{textAlign:"center",padding:32,color:C.textMuted}}><Icon name="poll" size={32} color={C.border}/><div style={{marginTop:12,fontWeight:600}}>No polls yet</div></Card>}
+            {polls.map(p=>{
+              const totalV = p.options.reduce((s,o)=>s+o.votes,0);
+              return (
+                <Card key={p.id} style={{marginBottom:10,padding:18}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
+                    <div style={{fontWeight:800,fontSize:15,flex:1}}>{p.question}</div>
+                    <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
+                      {p.active?<Badge label="Active" color={C.green} bg={C.greenBg}/>:<Badge label="Closed" color={C.textMuted} bg={C.bg}/>}
+                      {p.active&&<div onClick={()=>closePoll(p.id)} style={{width:28,height:28,borderRadius:6,background:C.bg,border:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}} title="Close poll"><Icon name="x" size={13} color={C.textMuted}/></div>}
+                    </div>
+                  </div>
+                  {p.options.map((o,oi)=>{
+                    const pct = totalV>0?Math.round(o.votes/totalV*100):0;
+                    return (
+                      <div key={oi} style={{marginBottom:8}}>
+                        <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                          <span style={{fontSize:13,fontWeight:600,color:C.text}}>{o.text}</span>
+                          <span style={{fontSize:12,fontWeight:700,color:C.textMuted}}>{o.votes} ({pct}%)</span>
+                        </div>
+                        <div style={{background:C.bg,borderRadius:4,height:8,overflow:"hidden"}}>
+                          <div style={{width:`${pct}%`,height:"100%",background:C.gradientAccent,borderRadius:4,transition:"width 0.3s"}}/>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div style={{fontSize:11,color:C.textMuted,marginTop:8,fontWeight:600}}>{totalV} vote{totalV!==1?"s":""} · Created {p.createdAt}</div>
+                </Card>
+              );
+            })}
+
+            <Modal open={pollModal} onClose={()=>setPollModal(false)}>
+              <h3 style={{...T.h3,margin:"0 0 20px"}}>Create Poll</h3>
+              <Input label="Question" value={pollQuestion} onChange={setPollQuestion} placeholder="e.g. Preferred restaurant for team dinner?"/>
+              <div style={{marginBottom:18}}>
+                <label style={{...T.label,display:"block",marginBottom:8,fontSize:11}}>Options</label>
+                {pollOptions.map((o,i)=>(
+                  <div key={i} style={{display:"flex",gap:8,marginBottom:8}}>
+                    <div style={{flex:1}}>
+                      <input value={o} onChange={e=>{const n=[...pollOptions];n[i]=e.target.value;setPollOptions(n);}} placeholder={`Option ${i+1}`} style={{width:"100%",padding:"12px 14px",border:`1.5px solid ${C.border}`,borderRadius:10,fontSize:14,fontWeight:500,color:C.text,background:C.white,outline:"none",boxSizing:"border-box"}}/>
+                    </div>
+                    {pollOptions.length>2&&<div onClick={()=>setPollOptions(prev=>prev.filter((_,j)=>j!==i))} style={{width:40,height:40,borderRadius:8,background:C.redBg,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}><Icon name="x" size={14} color={C.red}/></div>}
+                  </div>
+                ))}
+                {pollOptions.length<6&&<button onClick={()=>setPollOptions(prev=>[...prev,""])} style={{background:"none",border:`1.5px dashed ${C.border}`,borderRadius:8,padding:"10px 0",width:"100%",cursor:"pointer",fontSize:13,fontWeight:700,color:C.steel}}>+ Add Option</button>}
+              </div>
+              <Btn full onClick={createPoll} disabled={!pollQuestion||pollOptions.filter(o=>o.trim()).length<2}><Icon name="send" size={15} color={C.white}/> Push to Team</Btn>
+            </Modal>
+          </div>
+        )}
+
         {mTab==="settings"&&(
           <div>
             <Card style={{marginBottom:14,padding:24,textAlign:"center"}}>
@@ -913,10 +1095,10 @@ function App() {
       </Modal>
 
       <div style={{position:"fixed",bottom:0,left:0,right:0,background:C.white,borderTop:`1px solid ${C.border}`,display:"flex",padding:"8px 0 20px",justifyContent:"space-around",zIndex:50}}>
-        {[{icon:"home",label:"Home",tab:"dashboard"},{icon:"users",label:"Families",tab:"families"},{icon:"chart",label:"Activity",tab:"activity"},{icon:"settings",label:"Settings",tab:"settings"}].map(n=>(
-          <button key={n.tab} onClick={()=>setMTab(n.tab)} style={{background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"4px 12px"}}>
+        {[{icon:"home",label:"Home",tab:"dashboard"},{icon:"calendar",label:"Calendar",tab:"calendar"},{icon:"poll",label:"Polls",tab:"polls"},{icon:"users",label:"Families",tab:"families"},{icon:"settings",label:"More",tab:"settings"}].map(n=>(
+          <button key={n.tab} onClick={()=>setMTab(n.tab)} style={{background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"4px 8px"}}>
             <Icon name={n.icon} size={20} color={mTab===n.tab?C.navy:C.textMuted}/>
-            <span style={{fontSize:10,fontWeight:700,color:mTab===n.tab?C.navy:C.textMuted}}>{n.label}</span>
+            <span style={{fontSize:9,fontWeight:700,color:mTab===n.tab?C.navy:C.textMuted}}>{n.label}</span>
           </button>
         ))}
       </div>
@@ -1038,7 +1220,7 @@ function App() {
             )}
           </Card>
 
-          <TabBar tabs={[{id:"dashboard",label:"Dashboard"},{id:"fund",label:"Fund Activity"},{id:"profile",label:"Profile"}]} active={pTab} onSelect={setPTab}/>
+          <TabBar tabs={[{id:"dashboard",label:"Home"},{id:"calendar",label:"Calendar"},{id:"polls",label:"Polls"},{id:"fund",label:"Fund"}]} active={pTab} onSelect={setPTab}/>
 
           {pTab==="dashboard"&&(
             <div>
@@ -1110,6 +1292,80 @@ function App() {
                     </div>
                   ))}
                 </Card>
+              )}
+            </div>
+          )}
+
+          {pTab==="calendar"&&(
+            <div>
+              <div style={{fontWeight:800,fontSize:17,marginBottom:14}}>Team Calendar</div>
+              {sortedEvents.length===0&&<Card style={{textAlign:"center",padding:32,color:C.textMuted}}><Icon name="calendar" size={32} color={C.border}/><div style={{marginTop:12,fontWeight:600}}>No events scheduled</div></Card>}
+              {sortedEvents.map(ev=>(
+                <Card key={ev.id} style={{marginBottom:8,padding:"14px 16px",borderLeft:`4px solid ${eventTypeColor(ev.type)}`}}>
+                  <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
+                    <div style={{width:44,minHeight:44,borderRadius:10,background:`${eventTypeColor(ev.type)}15`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",flexShrink:0,padding:"4px 0"}}>
+                      <div style={{fontSize:10,fontWeight:700,color:eventTypeColor(ev.type),textTransform:"uppercase"}}>{fmtEventDate(ev.date).split(" ")[0]}</div>
+                      <div style={{fontSize:18,fontWeight:900,color:eventTypeColor(ev.type),lineHeight:1}}>{ev.date.split("-")[2]}</div>
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+                        <div style={{fontWeight:700,fontSize:14}}>{ev.title}</div>
+                        <Badge label={eventTypeLabel(ev.type)} color={eventTypeColor(ev.type)} bg={`${eventTypeColor(ev.type)}15`}/>
+                      </div>
+                      <div style={{fontSize:12,color:C.textMuted,fontWeight:500,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                        {ev.time&&<><Icon name="clock" size={11} color={C.textMuted}/> {ev.time}</>}
+                        {ev.location&&<><span style={{color:C.border}}>·</span><Icon name="mapPin" size={11} color={C.textMuted}/> {ev.location}</>}
+                      </div>
+                      {ev.notes&&<div style={{fontSize:12,color:C.textSec,marginTop:4,fontWeight:500,background:C.offWhite,padding:"6px 10px",borderRadius:6,border:`1px solid ${C.borderLight}`}}>{ev.notes}</div>}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {pTab==="polls"&&(
+            <div>
+              <div style={{fontWeight:800,fontSize:17,marginBottom:14}}>Team Polls</div>
+              {polls.filter(p=>p.active).length===0&&polls.filter(p=>!p.active).length===0&&<Card style={{textAlign:"center",padding:32,color:C.textMuted}}><Icon name="poll" size={32} color={C.border}/><div style={{marginTop:12,fontWeight:600}}>No polls yet</div></Card>}
+              {polls.filter(p=>p.active).map(p=>{
+                const totalV = p.options.reduce((s,o)=>s+o.votes,0);
+                return (
+                  <Card key={p.id} style={{marginBottom:10,padding:18}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                      <div style={{fontWeight:800,fontSize:15,flex:1}}>{p.question}</div>
+                      <Badge label="Vote" color={p.voted?C.green:C.accent} bg={p.voted?C.greenBg:C.accentGlow}/>
+                    </div>
+                    {p.options.map((o,oi)=>{
+                      const pct = totalV>0?Math.round(o.votes/totalV*100):0;
+                      return (
+                        <div key={oi} onClick={()=>!p.voted&&votePoll(p.id,oi)} style={{marginBottom:8,cursor:p.voted?"default":"pointer",padding:"10px 14px",borderRadius:10,border:`1.5px solid ${p.voted?C.borderLight:C.border}`,background:p.voted?C.offWhite:C.white,transition:"all 0.15s",position:"relative",overflow:"hidden"}}>
+                          {p.voted&&<div style={{position:"absolute",left:0,top:0,bottom:0,width:`${pct}%`,background:`${C.accent}10`,transition:"width 0.3s"}}/>}
+                          <div style={{display:"flex",justifyContent:"space-between",position:"relative",zIndex:1}}>
+                            <span style={{fontSize:14,fontWeight:600,color:C.text}}>{o.text}</span>
+                            {p.voted&&<span style={{fontSize:13,fontWeight:700,color:C.accent}}>{pct}%</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div style={{fontSize:11,color:C.textMuted,marginTop:6,fontWeight:600}}>{p.voted?"You voted":"Tap to vote"} · {totalV} vote{totalV!==1?"s":""}</div>
+                  </Card>
+                );
+              })}
+              {polls.filter(p=>!p.active).length>0&&(
+                <div>
+                  <div style={{...T.caption,margin:"16px 0 10px",fontSize:11}}>Closed Polls</div>
+                  {polls.filter(p=>!p.active).map(p=>{
+                    const totalV = p.options.reduce((s,o)=>s+o.votes,0);
+                    const winner = [...p.options].sort((a,b)=>b.votes-a.votes)[0];
+                    return (
+                      <Card key={p.id} style={{marginBottom:8,padding:14,background:C.offWhite}}>
+                        <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>{p.question}</div>
+                        <div style={{fontSize:12,color:C.textSec,fontWeight:600}}>Result: {winner.text} ({totalV>0?Math.round(winner.votes/totalV*100):0}%) · {totalV} votes</div>
+                      </Card>
+                    );
+                  })}
+                </div>
               )}
             </div>
           )}
@@ -1187,10 +1443,10 @@ function App() {
         </div>
 
         <div style={{position:"fixed",bottom:0,left:0,right:0,background:C.white,borderTop:`1px solid ${C.border}`,display:"flex",padding:"8px 0 20px",justifyContent:"space-around",zIndex:50}}>
-          {[{icon:"home",label:"Home",tab:"dashboard"},{icon:"chart",label:"Fund",tab:"fund"},{icon:"settings",label:"Profile",tab:"profile"}].map(n=>(
-            <button key={n.tab} onClick={()=>setPTab(n.tab)} style={{background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"4px 12px"}}>
+          {[{icon:"home",label:"Home",tab:"dashboard"},{icon:"calendar",label:"Calendar",tab:"calendar"},{icon:"poll",label:"Polls",tab:"polls"},{icon:"chart",label:"Fund",tab:"fund"},{icon:"settings",label:"Profile",tab:"profile"}].map(n=>(
+            <button key={n.tab} onClick={()=>setPTab(n.tab)} style={{background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"4px 8px"}}>
               <Icon name={n.icon} size={20} color={pTab===n.tab?C.navy:C.textMuted}/>
-              <span style={{fontSize:10,fontWeight:700,color:pTab===n.tab?C.navy:C.textMuted}}>{n.label}</span>
+              <span style={{fontSize:9,fontWeight:700,color:pTab===n.tab?C.navy:C.textMuted}}>{n.label}</span>
             </button>
           ))}
         </div>
