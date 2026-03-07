@@ -1,1464 +1,407 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PayFair — The Modern Platform for Team Slush Funds</title>
-<meta name="description" content="PayFair eliminates the personal financial burden on youth sports team managers with virtual cards, flexible payment plans, and real-time fund transparency.">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230A1628'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='%2300D4AA' font-family='system-ui' font-weight='900' font-size='14'%3EPF%3C/text%3E%3C/svg%3E">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>PayFair — Team Finance</title>
+<meta name="description" content="The modern platform for youth sports team slush funds"/>
+<meta name="theme-color" content="#18181B"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body,#root{min-height:100vh;width:100%}
-body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;background:#F1F5F9;color:#0F172A}
-input,button,select,textarea{font-family:inherit}
-input::placeholder{color:#94A3B8}
-button{-webkit-tap-highlight-color:transparent}
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:2px}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes slideUp{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
-.fade-in{animation:fadeIn 0.3s ease}
-.slide-up{animation:slideUp 0.3s ease}
-.pulse{animation:pulse 2s ease infinite}
+html,body,#root{height:100%;width:100%;font-family:-apple-system,BlinkMacSystemFont,"Inter","SF Pro Display","Helvetica Neue",Arial,sans-serif;background:#FFFFFF;color:#18181B;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+input,textarea,select,button{font-family:inherit;outline:none}
+::-webkit-scrollbar{display:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes slideUpModal{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.af{animation:fadeIn .3s ease}.as{animation:slideUp .4s ease}.am{animation:slideUpModal .3s ease}
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const {useState,useEffect,useCallback,useRef} = React;
+const {useState,useEffect,useRef,useCallback}=React;
 
-// ─── Design System ───
-const C = {
-  navy:"#0A1628",navyMid:"#0F2240",navyLight:"#162D50",
-  accent:"#00D4AA",accentDim:"#00B894",accentGlow:"rgba(0,212,170,0.15)",
-  cyan:"#00B4D8",steel:"#4A6FA5",
-  white:"#FFFFFF",offWhite:"#F8FAFC",bg:"#F1F5F9",surface:"#FFFFFF",
-  text:"#0F172A",textSec:"#475569",textMuted:"#94A3B8",
-  green:"#10B981",greenBg:"#ECFDF5",red:"#EF4444",redBg:"#FEF2F2",
-  orange:"#F59E0B",orangeBg:"#FFFBEB",border:"#E2E8F0",borderLight:"#F1F5F9",
-  shadow1:"0 1px 3px rgba(15,22,40,0.1),0 1px 2px rgba(15,22,40,0.06)",
-  shadow2:"0 4px 6px rgba(15,22,40,0.07),0 2px 4px rgba(15,22,40,0.06)",
-  shadowCard:"0 1px 3px rgba(15,22,40,0.08)",
-  gradient:"linear-gradient(135deg,#0A1628 0%,#162D50 40%,#1E3A5F 100%)",
-  gradientCard:"linear-gradient(160deg,#0F2240 0%,#0A1628 40%,#162D50 80%,#1E4D6E 100%)",
-  gradientAccent:"linear-gradient(135deg,#00D4AA 0%,#00B4D8 100%)",
-  gradientBtn:"linear-gradient(135deg,#0F2240 0%,#1E3A5F 100%)",
+/* ══════════════════════════════════════════════════
+   DESIGN SYSTEM — Figma Make + PayFair Fintech DNA
+   ══════════════════════════════════════════════════ */
+const C={
+  bg:'#FFFFFF',bgSec:'#F9FAFB',bgDark:'#18181B',bgDarker:'#0F0F12',bgCard:'#FFFFFF',bgCardDark:'#2E2F33',
+  text:'#18181B',textSec:'#52525B',textMuted:'#A1A1AA',white:'#FFFFFF',
+  accent:'#E7FF57',accentDark:'#D4EC4A',
+  teal:'#00D4AA',cyan:'#00B4D8',
+  green:'#10B981',red:'#EF4444',orange:'#F59E0B',blue:'#3B82F6',purple:'#8B5CF6',
+  border:'rgba(0,0,0,0.08)',borderDark:'rgba(255,255,255,0.08)',
+  gold:'#C9B037',goldLight:'#F5E6A0',goldDark:'#D4AF37',
 };
 
-const T = {
-  h1:{fontSize:32,fontWeight:800,letterSpacing:"-0.03em",lineHeight:1.1,color:C.text},
-  h2:{fontSize:24,fontWeight:800,letterSpacing:"-0.02em",lineHeight:1.2,color:C.text},
-  h3:{fontSize:18,fontWeight:700,letterSpacing:"-0.01em",color:C.text},
-  body:{fontSize:15,fontWeight:500,lineHeight:1.5,color:C.textSec},
-  caption:{fontSize:12,fontWeight:600,color:C.textMuted,letterSpacing:"0.02em"},
-  label:{fontSize:13,fontWeight:700,color:C.textSec,letterSpacing:"0.04em",textTransform:"uppercase"},
-  mono:{fontFamily:"'SF Mono','Fira Code','Consolas',monospace"},
+/* ══════════════════════════════════════════════════
+   ICONS
+   ══════════════════════════════════════════════════ */
+const icons={
+  home:"M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z M9 22V12h6v10",
+  calendar:"M16 2v4 M8 2v4 M3 10h18 M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z",
+  poll:"M18 20V10 M12 20V4 M6 20v-6",
+  users:"M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2 M9 11a4 4 0 100-8 4 4 0 000 8z M23 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75",
+  more:"M12 13a1 1 0 100-2 1 1 0 000 2z M19 13a1 1 0 100-2 1 1 0 000 2z M5 13a1 1 0 100-2 1 1 0 000 2z",
+  dollar:"M12 1v22 M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6",
+  bell:"M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 01-3.46 0",
+  settings:"M12 15a3 3 0 100-6 3 3 0 000 6z",
+  plus:"M12 5v14 M5 12h14",
+  check:"M20 6L9 17l-5-5",
+  chevRight:"M9 18l6-6-6-6",
+  x:"M18 6L6 18 M6 6l12 12",
+  send:"M22 2L11 13 M22 2l-7 20-4-9-9-4z",
+  heart:"M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z",
+  shield:"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+  mapPin:"M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z M12 13a3 3 0 100-6 3 3 0 000 6z",
+  eye:"M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 15a3 3 0 100-6 3 3 0 000 6z",
+  wifi:"M5 12.55a11 11 0 0114.08 0 M1.42 9a16 16 0 0121.16 0 M8.53 16.11a6 6 0 016.95 0 M12 20h.01",
+  arrowRight:"M5 12h14 M12 5l7 7-7 7",
+  creditCard:"M1 4h22v16H1z M1 10h22",
+  messageCircle:"M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z",
+  target:"M12 22a10 10 0 100-20 10 10 0 000 20z M12 18a6 6 0 100-12 6 6 0 000 12z M12 14a2 2 0 100-4 2 2 0 000 4z",
+  trophy:"M6 9H4.5a2.5 2.5 0 010-5H6 M18 9h1.5a2.5 2.5 0 000-5H18 M4 22h16 M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22 M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22 M18 2H6v7a6 6 0 0012 0V2z",
+  activity:"M22 12h-4l-3 9L9 3l-3 9H2",
+  user:"M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2 M12 11a4 4 0 100-8 4 4 0 000 8z",
 };
 
-// ─── EmailJS Config ───
-const EMAILJS_SERVICE = "service_payfair";
-const EMAILJS_TEMPLATE = "template_invite";
-const EMAILJS_PUBLIC_KEY = "YOUR_PUBLIC_KEY";
-
-function sendInviteEmail(toEmail, toName, teamName, managerName, amount, inviteLink) {
-  // If EmailJS is configured, send real email
-  if (EMAILJS_PUBLIC_KEY !== "YOUR_PUBLIC_KEY" && window.emailjs) {
-    return window.emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
-      to_email: toEmail, to_name: toName, team_name: teamName,
-      manager_name: managerName, amount: amount, invite_link: inviteLink,
-    }, EMAILJS_PUBLIC_KEY);
-  }
-  // Demo mode: simulate
-  return new Promise(r => setTimeout(() => r({status:200,text:"Demo mode"}), 500));
-}
-
-// ─── Data Store (in-memory, persists during session) ───
-const Store = {
-  teams: [],
-  currentTeam: null,
-  currentUser: null,
-
-  createTeam(data) {
-    const team = {
-      id: Date.now().toString(36),
-      ...data,
-      roster: [],
-      transactions: [],
-      fundPerFamily: 0,
-      totalFund: 0,
-      createdAt: new Date().toISOString(),
-      cardNumber: `4832 ${Math.floor(1000+Math.random()*9000)} ${Math.floor(1000+Math.random()*9000)} ${Math.floor(1000+Math.random()*9000)}`,
-      cardLast4: "",
-    };
-    team.cardLast4 = team.cardNumber.slice(-4);
-    this.teams.push(team);
-    this.currentTeam = team;
-    return team;
-  },
-
-  addRosterEntry(teamId, entry) {
-    const team = this.teams.find(t => t.id === teamId);
-    if (team) {
-      const re = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), ...entry,
-        paymentPlan: null, paymentsMade: [], paidAmount: 0, onTrack: null, invited: false, registered: false,
-        hardshipPledge: 0, hardshipUsed: 0, photo: null };
-      team.roster.push(re);
-      return re;
-    }
-  },
-
-  setFund(teamId, perFamily) {
-    const team = this.teams.find(t => t.id === teamId);
-    if (team) {
-      team.fundPerFamily = perFamily;
-      team.totalFund = perFamily * team.roster.length;
-    }
-  },
-
-  addTransaction(teamId, txn) {
-    const team = this.teams.find(t => t.id === teamId);
-    if (team) {
-      team.transactions.push({ id: Date.now().toString(36), date: new Date().toISOString().slice(0,10), ...txn });
-    }
-  },
-};
-
-// ─── Icons ───
-const Icon = ({name,size=20,color=C.textSec}) => {
-  const p = {width:size,height:size,viewBox:"0 0 24 24",fill:"none",stroke:color,strokeWidth:"2",strokeLinecap:"round",strokeLinejoin:"round"};
-  const m = {
-    card:<svg {...p}><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>,
-    users:<svg {...p}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,
-    chart:<svg {...p}><path d="M18 20V10M12 20V4M6 20v-6"/></svg>,
-    send:<svg {...p}><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>,
-    check:<svg {...p}><path d="M20 6L9 17l-5-5"/></svg>,
-    dollar:<svg {...p}><path d="M12 1v22M17 5H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 010 7H6"/></svg>,
-    shield:<svg {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-    heart:<svg {...p}><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>,
-    eye:<svg {...p}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
-    eyeOff:<svg {...p}><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"/></svg>,
-    back:<svg {...p}><path d="M19 12H5M12 19l-7-7 7-7"/></svg>,
-    plus:<svg {...p}><path d="M12 5v14M5 12h14"/></svg>,
-    bell:<svg {...p}><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>,
-    phone:<svg {...p}><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.12.74.3 1.46.52 2.15a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.69.22 1.41.4 2.15.52A2 2 0 0122 16.92z"/></svg>,
-    settings:<svg {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>,
-    home:<svg {...p}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>,
-    refresh:<svg {...p}><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>,
-    arrowRight:<svg {...p}><path d="M5 12h14M12 5l7 7-7 7"/></svg>,
-    wifi:<svg {...p}><path d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg>,
-    mail:<svg {...p}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>,
-    camera:<svg {...p}><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>,
-    creditCard:<svg {...p}><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
-    bank:<svg {...p}><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M8 10v11M12 10v11M16 10v11M20 10v11"/></svg>,
-    x:<svg {...p}><path d="M18 6L6 18M6 6l12 12"/></svg>,
-    alert:<svg {...p}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
-    lock:<svg {...p}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>,
-    zap:<svg {...p}><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg>,
-    trending:<svg {...p}><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>,
-    layers:<svg {...p}><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>,
-    calendar:<svg {...p}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
-    poll:<svg {...p}><path d="M18 20V10M12 20V4M6 20v-6"/></svg>,
-    clock:<svg {...p}><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>,
-    mapPin:<svg {...p}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
-  };
-  return m[name]||null;
-};
-
-const fmt = n => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n);
-const fmtDate = d => new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-
-// ─── Components ───
-const Btn = ({children,onClick,variant="primary",full,small,disabled,style:sx}) => {
-  const base = {border:"none",borderRadius:10,fontWeight:700,cursor:disabled?"default":"pointer",transition:"all 0.15s",display:"inline-flex",alignItems:"center",justifyContent:"center",gap:8,opacity:disabled?0.4:1,width:full?"100%":"auto",fontSize:small?13:15,padding:small?"10px 18px":"14px 28px",letterSpacing:"-0.01em"};
-  const v = {
-    primary:{...base,background:C.gradientBtn,color:C.white,boxShadow:C.shadow2},
-    accent:{...base,background:C.gradientAccent,color:C.navy,boxShadow:"0 4px 14px rgba(0,212,170,0.3)"},
-    secondary:{...base,background:C.navy,color:C.white},
-    outline:{...base,background:"transparent",color:C.text,border:`1.5px solid ${C.border}`},
-    ghost:{...base,background:"transparent",color:C.textSec,padding:small?"8px 14px":"10px 18px"},
-    danger:{...base,background:C.redBg,color:C.red,border:`1px solid ${C.red}20`},
-  };
-  return <button style={{...v[variant],...sx}} onClick={disabled?undefined:onClick}>{children}</button>;
-};
-
-const Card = ({children,style:sx,onClick,className}) => (
-  <div onClick={onClick} className={className} style={{background:C.surface,borderRadius:12,padding:20,boxShadow:C.shadowCard,border:`1px solid ${C.borderLight}`,cursor:onClick?"pointer":"default",transition:"all 0.15s",...sx}}>{children}</div>
+const Icon=({name,size=20,color=C.text,style:s={}})=>(
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={s}>
+    {(icons[name]||"").split(" M").map((d,i)=><path key={i} d={i===0?d:"M"+d}/>)}
+  </svg>
 );
 
-const Badge = ({label,color=C.accent,bg=C.accentGlow}) => (
-  <span style={{background:bg,color,fontSize:11,fontWeight:800,padding:"4px 10px",borderRadius:6,letterSpacing:"0.04em",textTransform:"uppercase",border:`1px solid ${color}20`}}>{label}</span>
+/* ══════════════════════════════════════════════════
+   SHARED UI COMPONENTS
+   ══════════════════════════════════════════════════ */
+const Btn=({children,variant="primary",small,full,onClick,disabled,style:s={}})=>{
+  const base={display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6,borderRadius:10,fontWeight:600,cursor:disabled?'not-allowed':'pointer',transition:'all 0.2s',border:'none',fontSize:small?13:15,padding:small?'8px 16px':'14px 24px',width:full?'100%':'auto',opacity:disabled?0.4:1};
+  const v={primary:{...base,background:C.accent,color:C.text},dark:{...base,background:C.bgDark,color:C.white},outline:{...base,background:'transparent',border:'1px solid '+C.border,color:C.text},ghost:{...base,background:'transparent',color:C.textSec},danger:{...base,background:C.red,color:C.white}};
+  return <button onClick={disabled?undefined:onClick} style={{...(v[variant]||v.primary),...s}}>{children}</button>;
+};
+
+const Card=({children,dark,style:s={},onClick})=>(
+  <div onClick={onClick} style={{background:dark?C.bgDark:C.bgCard,borderRadius:16,padding:20,border:dark?'none':'1px solid '+C.border,boxShadow:dark?'none':'0 1px 3px rgba(0,0,0,0.06)',cursor:onClick?'pointer':'default',transition:'all 0.2s',...s}}>{children}</div>
 );
 
-const Input = ({label,value,onChange,type="text",placeholder,icon,multiline,disabled}) => (
-  <div style={{marginBottom:18}}>
-    {label && <label style={{...T.label,display:"block",marginBottom:8,fontSize:11}}>{label}</label>}
-    <div style={{position:"relative"}}>
-      {multiline ?
-        <textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} disabled={disabled} rows={3} style={{width:"100%",padding:"14px 16px",border:`1.5px solid ${C.border}`,borderRadius:10,fontSize:15,fontWeight:500,color:C.text,background:disabled?C.bg:C.white,outline:"none",boxSizing:"border-box",resize:"vertical",fontFamily:"inherit"}} /> :
-        <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} disabled={disabled} style={{width:"100%",padding:"14px 16px",paddingLeft:icon?44:16,border:`1.5px solid ${C.border}`,borderRadius:10,fontSize:15,fontWeight:500,color:C.text,background:disabled?C.bg:C.white,outline:"none",boxSizing:"border-box",transition:"border 0.15s"}} onFocus={e=>e.target.style.borderColor=C.navy} onBlur={e=>e.target.style.borderColor=C.border} />
-      }
-      {icon && <div style={{position:"absolute",left:14,top:multiline?18:"50%",transform:multiline?"none":"translateY(-50%)"}}>{icon}</div>}
+const Badge=({children,color=C.green,bg})=>(
+  <span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:600,background:bg||(color+'15'),color}}>{children}</span>
+);
+
+const Avatar=({name,size=40})=>{
+  const i=name?name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase():'?';
+  const colors=['#E7FF57','#00D4AA','#00B4D8','#F59E0B','#8B5CF6','#EF4444'];
+  const c=colors[name?name.length%colors.length:0];
+  return <div style={{width:size,height:size,borderRadius:size,background:c,display:'flex',alignItems:'center',justifyContent:'center',fontSize:size*.36,fontWeight:700,color:C.text,flexShrink:0}}>{i}</div>;
+};
+
+const Modal=({children,onClose,title,subtitle})=>(
+  <div style={{position:'fixed',inset:0,zIndex:100,display:'flex',alignItems:'flex-end',justifyContent:'center'}} className="af">
+    <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',backdropFilter:'blur(4px)'}} onClick={onClose}/>
+    <div className="am" style={{position:'relative',background:C.bg,borderRadius:'24px 24px 0 0',width:'100%',maxWidth:428,maxHeight:'90vh',overflow:'auto',paddingBottom:32}}>
+      <div style={{padding:'20px 24px 0',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,background:C.bg,zIndex:1,paddingBottom:16,borderBottom:'1px solid '+C.border}}>
+        <div><div style={{fontSize:18,fontWeight:700}}>{title}</div>{subtitle&&<div style={{fontSize:13,color:C.textMuted,marginTop:2}}>{subtitle}</div>}</div>
+        <button onClick={onClose} style={{width:32,height:32,borderRadius:32,background:C.bgSec,border:'none',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}><Icon name="x" size={16} color={C.textSec}/></button>
+      </div>
+      <div style={{padding:'20px 24px'}}>{children}</div>
     </div>
   </div>
 );
 
-const Progress = ({value,max,color=C.accent,height=6}) => (
-  <div style={{background:C.bg,borderRadius:3,height,overflow:"hidden"}}>
-    <div style={{width:`${Math.min((value/max)*100,100)}%`,height:"100%",background:color,borderRadius:3,transition:"width 0.5s ease"}} />
+const ProgressBar=({value,max=100,color=C.accent,height=6,bg=C.bgSec})=>(
+  <div style={{height,borderRadius:height,background:bg,overflow:'hidden',width:'100%'}}>
+    <div style={{height:'100%',borderRadius:height,background:color,width:Math.min(value/max*100,100)+'%',transition:'width 0.6s ease'}}/>
   </div>
 );
 
-const Avatar = ({name,size=40,src}) => {
-  if(src) return <img src={src} style={{width:size,height:size,borderRadius:8,objectFit:"cover"}} />;
-  const initials = name.split(" ").map(n=>n[0]).join("").slice(0,2);
-  const hues = [220,200,180,240,160,280];
-  const h = hues[name.length%hues.length];
-  return <div style={{width:size,height:size,borderRadius:8,background:`hsl(${h},50%,25%)`,display:"flex",alignItems:"center",justifyContent:"center",color:`hsl(${h},60%,80%)`,fontWeight:800,fontSize:size*0.36,flexShrink:0}}>{initials}</div>;
+const InputField=({label,value,onChange,placeholder,type="text",icon})=>(
+  <div style={{marginBottom:16}}>
+    {label&&<label style={{fontSize:12,fontWeight:600,color:C.textSec,marginBottom:6,display:'block',textTransform:'uppercase',letterSpacing:'0.05em'}}>{label}</label>}
+    <div style={{position:'relative'}}>
+      {icon&&<div style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)'}}><Icon name={icon} size={16} color={C.textMuted}/></div>}
+      <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={{width:'100%',padding:'14px 16px',paddingLeft:icon?42:16,borderRadius:12,border:'1px solid '+C.border,background:C.bg,fontSize:15,color:C.text,transition:'border-color 0.2s'}} onFocus={e=>e.target.style.borderColor=C.accent} onBlur={e=>e.target.style.borderColor=C.border}/>
+    </div>
+  </div>
+);
+
+/* ══════════════════════════════════════════════════
+   VIRTUAL CARD — Amex Black Card
+   ══════════════════════════════════════════════════ */
+const VirtualCard=({balance=0,show=false,onToggle})=>(
+  <div onClick={onToggle} style={{background:'linear-gradient(145deg,#1A1A2E 0%,#0D0D1A 30%,#16162A 60%,#0A0A14 100%)',borderRadius:20,padding:'28px 26px',color:C.white,position:'relative',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.06)',cursor:'pointer',minHeight:210}}>
+    <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,rgba(255,255,255,0.03) 0%,transparent 40%,rgba(255,255,255,0.02) 70%,transparent 100%)'}}/>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',position:'relative',marginBottom:24}}>
+      <div style={{display:'flex',alignItems:'center',gap:12}}>
+        <div style={{width:44,height:32,borderRadius:5,background:'linear-gradient(135deg,'+C.gold+' 0%,'+C.goldDark+' 40%,'+C.goldLight+' 50%,'+C.goldDark+' 60%,'+C.gold+' 100%)',boxShadow:'inset 0 1px 2px rgba(255,255,255,0.3),0 1px 3px rgba(0,0,0,0.3)',position:'relative'}}>
+          <div style={{position:'absolute',inset:4,display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:1}}>{[...Array(6)].map((_,i)=><div key={i} style={{background:'rgba(0,0,0,0.15)',borderRadius:1}}/>)}</div>
+        </div>
+        <Icon name="wifi" size={18} color="rgba(255,255,255,0.3)" style={{transform:'rotate(90deg)'}}/>
+      </div>
+      <div style={{fontSize:20,fontWeight:900,letterSpacing:'0.08em',background:'linear-gradient(135deg,'+C.gold+' 0%,'+C.goldLight+' 50%,'+C.gold+' 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>PF</div>
+    </div>
+    <div style={{position:'relative'}}>
+      <div style={{fontSize:11,fontWeight:500,color:'rgba(255,255,255,0.4)',textTransform:'uppercase',letterSpacing:'0.12em',marginBottom:4}}>Available Balance</div>
+      <div style={{fontSize:34,fontWeight:800,letterSpacing:'-0.02em',background:'linear-gradient(135deg,rgba(255,255,255,0.95),rgba(255,255,255,0.7))',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
+        ${balance.toLocaleString('en-US',{minimumFractionDigits:2})}
+      </div>
+    </div>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:20,position:'relative'}}>
+      <div style={{fontSize:13,letterSpacing:'0.15em',color:'rgba(255,255,255,0.35)',fontWeight:500}}>{show?'4242 8888 1234 5678':'•••• •••• •••• 5678'}</div>
+      <div style={{padding:'5px 14px',borderRadius:20,background:'rgba(255,255,255,0.08)',border:'1px solid rgba(255,255,255,0.1)',fontSize:11,color:'rgba(255,255,255,0.5)',fontWeight:600,letterSpacing:'0.05em'}}>{show?'HIDE':'TAP TO REVEAL'}</div>
+    </div>
+  </div>
+);
+
+/* ══════════════════════════════════════════════════
+   STAT CARD, COLLECTION PROGRESS, FAMILY ITEM
+   ══════════════════════════════════════════════════ */
+const StatCard=({label,value,change,dark})=>(
+  <div style={{background:dark?C.bgDark:'#F8F9FA',borderRadius:14,padding:'16px 18px',flex:1,border:dark?'1px solid rgba(255,255,255,0.06)':'1px solid '+C.border}}>
+    <div style={{fontSize:11,fontWeight:600,color:dark?'rgba(255,255,255,0.4)':C.textMuted,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}}>{label}</div>
+    <div style={{fontSize:22,fontWeight:800,color:dark?C.white:C.text,letterSpacing:'-0.02em'}}>{value}</div>
+    {change!=null&&<div style={{fontSize:12,fontWeight:600,color:change>0?C.green:C.red,marginTop:4}}>{change>0?'+':''}{change}%</div>}
+  </div>
+);
+
+const CollectionProgress=({collected=5184,total=7200})=>{
+  const pct=Math.round(collected/total*100);
+  return(<Card><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}><div style={{fontSize:14,fontWeight:600}}>Collection Progress</div><div style={{fontSize:15,fontWeight:700,color:C.green}}>{pct}%</div></div><ProgressBar value={pct} color={C.green} height={8}/><div style={{display:'flex',justifyContent:'space-between',marginTop:8}}><span style={{fontSize:12,color:C.textMuted}}>${collected.toLocaleString()} collected</span><span style={{fontSize:12,color:C.textMuted}}>${total.toLocaleString()} goal</span></div></Card>);
 };
 
-const TabBar = ({tabs,active,onSelect}) => (
-  <div style={{display:"flex",gap:4,background:C.bg,borderRadius:10,padding:3,marginBottom:20,border:`1px solid ${C.border}`}}>
+const FamilyItem=({name,player,amount,status,onClick})=>(
+  <div onClick={onClick} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 0',borderBottom:'1px solid '+C.border,cursor:onClick?'pointer':'default'}}>
+    <div style={{display:'flex',alignItems:'center',gap:14}}>
+      <div style={{position:'relative'}}><Avatar name={name} size={44}/><div style={{position:'absolute',bottom:-1,right:-1,width:14,height:14,borderRadius:14,background:status==='paid'?C.green:status==='partial'?C.orange:C.red,border:'2px solid white'}}/></div>
+      <div><div style={{fontSize:15,fontWeight:600}}>{name}</div><div style={{fontSize:12,color:C.textMuted}}>{player}</div></div>
+    </div>
+    <div style={{textAlign:'right'}}><div style={{fontSize:15,fontWeight:700}}>${amount}</div><Badge color={status==='paid'?C.green:status==='partial'?C.orange:C.red}>{status==='paid'?'Paid':status==='partial'?'Partial':'Pending'}</Badge></div>
+  </div>
+);
+
+/* ══════════════════════════════════════════════════
+   PAYMENT PLAN SELECTOR
+   ══════════════════════════════════════════════════ */
+const PaymentPlanSelector=({total=200,selected,onSelect})=>{
+  const plans=[{id:1,n:1,fee:0,label:'Pay in Full',sub:'No convenience fee'},{id:2,n:2,fee:2.99,label:'Split in 2',sub:'2 payments'},{id:4,n:4,fee:3.99,label:'Split in 4',sub:'4 payments'},{id:8,n:8,fee:4.99,label:'Split in 8',sub:'8 payments'}];
+  return(<div style={{display:'flex',flexDirection:'column',gap:10}}>{plans.map(p=>{const tf=p.fee*p.n;const pp=(total+tf)/p.n;const sel=selected===p.id;return(<div key={p.id} onClick={()=>onSelect(p.id)} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 18px',borderRadius:14,border:'2px solid '+(sel?C.accent:C.border),background:sel?C.accent+'08':C.bg,cursor:'pointer',transition:'all 0.2s'}}><div style={{display:'flex',alignItems:'center',gap:14}}><div style={{width:22,height:22,borderRadius:22,border:'2px solid '+(sel?C.accent:C.border),display:'flex',alignItems:'center',justifyContent:'center'}}>{sel&&<div style={{width:12,height:12,borderRadius:12,background:C.accent}}/>}</div><div><div style={{fontSize:15,fontWeight:600}}>{p.label}</div><div style={{fontSize:12,color:C.textMuted}}>{p.sub}{p.fee>0&&' · $'+p.fee+' fee each'}</div></div></div><div style={{textAlign:'right'}}><div style={{fontSize:16,fontWeight:700}}>${pp.toFixed(2)}</div>{p.n>1&&<div style={{fontSize:11,color:C.textMuted}}>x{p.n}</div>}</div></div>);})}</div>);
+};
+
+/* ══════════════════════════════════════════════════
+   BOTTOM NAV
+   ══════════════════════════════════════════════════ */
+const BottomNav=({tabs,active,onTab})=>(
+  <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:'100%',maxWidth:428,background:'rgba(255,255,255,0.95)',backdropFilter:'blur(20px)',borderTop:'1px solid '+C.border,display:'flex',padding:'8px 0 env(safe-area-inset-bottom,8px)',zIndex:50}}>
     {tabs.map(t=>(
-      <button key={t.id} onClick={()=>onSelect(t.id)} style={{flex:1,padding:"10px 0",border:"none",borderRadius:8,background:active===t.id?C.white:"transparent",color:active===t.id?C.text:C.textMuted,fontWeight:700,fontSize:13,cursor:"pointer",transition:"all 0.15s",boxShadow:active===t.id?C.shadow1:"none",letterSpacing:"-0.01em"}}>{t.label}</button>
+      <button key={t.id} onClick={()=>onTab(t.id)} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'8px 0',background:'none',border:'none',cursor:'pointer'}}>
+        <div style={{width:36,height:36,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',background:active===t.id?C.accent:'transparent',transition:'all 0.2s'}}><Icon name={t.icon} size={20} color={active===t.id?C.text:C.textMuted}/></div>
+        <span style={{fontSize:10,fontWeight:active===t.id?700:500,color:active===t.id?C.text:C.textMuted}}>{t.label}</span>
+      </button>
     ))}
   </div>
 );
 
-const Modal = ({open,onClose,children}) => {
-  if(!open) return null;
-  return (
-    <div style={{position:"fixed",inset:0,background:"rgba(10,22,40,0.7)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:100,backdropFilter:"blur(4px)"}} onClick={onClose}>
-      <div className="slide-up" style={{background:C.white,borderRadius:"16px 16px 0 0",padding:28,width:"100%",maxWidth:480,maxHeight:"85vh",overflowY:"auto"}} onClick={e=>e.stopPropagation()}>
-        <div style={{width:36,height:4,background:C.border,borderRadius:2,margin:"0 auto 20px"}} />
-        {children}
-      </div>
-    </div>
-  );
-};
-
-const VirtualCard = ({balance,spent,name,cardNum,show,onToggle,compact}) => (
-  <div style={{background:"linear-gradient(145deg,#1A1A2E 0%,#0D0D1A 30%,#16162A 60%,#0A0A14 100%)",borderRadius:16,padding:compact?"20px 22px":"28px 28px",color:C.white,position:"relative",overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.06)",cursor:"pointer",minHeight:compact?170:210}} onClick={onToggle}>
-    {/* Metal texture overlay */}
-    <div style={{position:"absolute",inset:0,background:"linear-gradient(135deg,rgba(255,255,255,0.03) 0%,transparent 40%,rgba(255,255,255,0.02) 70%,transparent 100%)"}} />
-    {/* Subtle edge highlight */}
-    <div style={{position:"absolute",top:0,left:0,right:0,height:1,background:"linear-gradient(90deg,transparent 10%,rgba(255,255,255,0.08) 50%,transparent 90%)"}} />
-    {/* Contactless chip */}
-    <div style={{position:"absolute",top:compact?16:22,right:compact?20:26,display:"flex",alignItems:"center",gap:8}}>
-      <div style={{width:44,height:32,borderRadius:5,background:"linear-gradient(135deg,#C9B037 0%,#D4AF37 40%,#F5E6A0 50%,#D4AF37 60%,#C9B037 100%)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 1px 3px rgba(0,0,0,0.3)"}}>
-        <Icon name="wifi" size={14} color="rgba(26,26,46,0.6)" />
-      </div>
-    </div>
-    <div style={{position:"relative",zIndex:1}}>
-      <div style={{marginBottom:compact?18:24}}>
-        <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(255,255,255,0.35)",marginBottom:6}}>Available Balance</div>
-        <div style={{fontSize:compact?30:36,fontWeight:900,letterSpacing:"-0.03em",lineHeight:1,background:"linear-gradient(135deg,#FFFFFF 0%,#E0E0E0 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>{fmt(balance-spent)}</div>
-        <div style={{fontSize:11,color:"rgba(255,255,255,0.3)",marginTop:6,fontWeight:600}}>of {fmt(balance)} total fund</div>
-      </div>
-      <div style={{...T.mono,fontSize:compact?17:20,letterSpacing:"0.22em",marginBottom:compact?18:24,fontWeight:500,color:"rgba(255,255,255,0.85)"}}>
-        {show ? cardNum : `\u2022\u2022\u2022\u2022  \u2022\u2022\u2022\u2022  \u2022\u2022\u2022\u2022  ${(cardNum||"").slice(-4)||"3318"}`}
-      </div>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
-        <div>
-          <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)"}}>Card Holder</div>
-          <div style={{fontSize:13,fontWeight:700,marginTop:3,letterSpacing:"0.04em",color:"rgba(255,255,255,0.85)"}}>{name}</div>
-        </div>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <div style={{display:"flex",alignItems:"center",gap:4,fontSize:10,fontWeight:600,color:"rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.06)",padding:"5px 12px",borderRadius:20,border:"1px solid rgba(255,255,255,0.08)"}}>
-            {show?<Icon name="eye" size={11} color="rgba(255,255,255,0.5)"/>:<Icon name="eyeOff" size={11} color="rgba(255,255,255,0.5)"/>}
-            {show?"Hide":"Tap to Reveal"}
-          </div>
-          <div style={{fontSize:18,fontWeight:900,letterSpacing:"0.08em",background:"linear-gradient(135deg,#C9B037 0%,#F5E6A0 50%,#C9B037 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>PF</div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const CatIcon = ({cat}) => {
-  const m = {Lodging:"🏨",Meals:"🍽",Tournament:"🏆",Discretionary:"🔒",Travel:"🚌",Equipment:"👕",Other:"📦"};
-  return <div style={{width:40,height:40,borderRadius:10,background:cat==="Discretionary"?C.orangeBg:C.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{m[cat]||"💳"}</div>;
-};
-
-const PLANS = [
-  {installments:1,feePerInstallment:0,label:"Pay in Full",desc:"No convenience fee"},
-  {installments:2,feePerInstallment:2,label:"2 Payments",desc:"$2 per installment"},
-  {installments:4,feePerInstallment:4,label:"4 Payments",desc:"$4 per installment"},
-  {installments:8,feePerInstallment:8,label:"8 Payments",desc:"$8 per installment"},
+/* ══════════════════════════════════════════════════
+   DEMO DATA
+   ══════════════════════════════════════════════════ */
+const demoFamilies=[
+  {id:1,name:'Sarah Martinez',player:'Diego (#7)',amount:185,paid:185,status:'paid'},
+  {id:2,name:'Michael Rodriguez',player:'Lucas (#12)',amount:185,paid:185,status:'paid'},
+  {id:3,name:'Jennifer Chen',player:'Tyler (#3)',amount:185,paid:92.50,status:'partial'},
+  {id:4,name:'David Thompson',player:'Emma (#9)',amount:185,paid:46.25,status:'partial'},
+  {id:5,name:'Lisa Johnson',player:'Aiden (#15)',amount:185,paid:0,status:'pending'},
+  {id:6,name:'Robert Wilson',player:'Mia (#21)',amount:185,paid:23.13,status:'partial'},
+];
+const demoEvents=[
+  {id:'e1',title:'Frostbite Classic Tournament',date:'2026-03-14',time:'7:00 AM',location:'IceWorks Rink, Aston PA',type:'tournament',notes:'Full team required. Arrive 45 min early.'},
+  {id:'e2',title:'Practice — Power Play Drills',date:'2026-03-11',time:'6:30 PM',location:'Skate Zone, Voorhees NJ',type:'practice'},
+  {id:'e3',title:'vs. Jersey Shore Titans',date:'2026-03-18',time:'7:15 PM',location:'Igloo Ice Arena, Mount Laurel NJ',type:'game'},
+  {id:'e4',title:'Team Pizza Night',date:'2026-03-20',time:'6:00 PM',location:"Lou's Pizza, Cherry Hill NJ",type:'event'},
+  {id:'e5',title:'Playoffs Round 1',date:'2026-03-28',time:'8:00 PM',location:'Flyers Skate Zone, Pennsauken NJ',type:'game'},
+];
+const demoPolls=[
+  {id:'p1',question:'Team dinner restaurant preference?',options:[{text:'Olive Garden',votes:12},{text:'Chipotle',votes:5},{text:"Chick-fil-A",votes:8}],active:true,totalVoters:25,createdAt:'2026-03-05'},
+  {id:'p2',question:'Charter bus for Frostbite Classic? ($45/family)',options:[{text:'Yes — charter bus',votes:16},{text:"No — we'll drive",votes:6}],active:true,totalVoters:22,createdAt:'2026-03-04'},
+  {id:'p3',question:'Preferred practice time next month?',options:[{text:'5:30 PM',votes:8},{text:'6:30 PM',votes:14},{text:'7:30 PM',votes:3}],active:false,totalVoters:25,createdAt:'2026-03-01',decided:'6:30 PM'},
+];
+const demoMessages=[
+  {id:'m1',from:'Coach Mike',preview:'Great practice today team! Remember to bring...',time:'2h ago',unread:true},
+  {id:'m2',from:'Tournament Director',preview:'Frostbite Classic schedule has been posted...',time:'5h ago',unread:true},
+  {id:'m3',from:'Sarah Martinez',preview:'Diego will miss Tuesday practice due to...',time:'1d ago',unread:false},
 ];
 
-const DEMO_TXNS = [
-  {id:"t1",date:"2026-01-15",desc:"Holiday Inn — Coach Hotel (3 nights)",amount:687,category:"Lodging"},
-  {id:"t2",date:"2026-01-16",desc:"Olive Garden — Team Dinner (22 ppl)",amount:412.50,category:"Meals"},
-  {id:"t3",date:"2026-01-28",desc:"Tournament Entry — Frostbite Classic",amount:1250,category:"Tournament"},
-  {id:"t4",date:"2026-02-02",desc:"Manager's Discretion",amount:85,category:"Discretionary"},
-  {id:"t5",date:"2026-02-10",desc:"Charter Bus — Away Tournament",amount:1800,category:"Travel"},
-  {id:"t6",date:"2026-02-14",desc:"Team Jerseys — Custom Print",amount:960,category:"Equipment"},
-];
+/* ══════════════════════════════════════════════════
+   HELPERS
+   ══════════════════════════════════════════════════ */
+const eventTypeColor=t=>({game:C.red,practice:C.blue,tournament:C.orange,event:C.green}[t]||C.textMuted);
+const eventTypeLabel=t=>({game:'Game',practice:'Practice',tournament:'Tournament',event:'Team Event'}[t]||t);
+const fmtDate=d=>{const dt=new Date(d+'T12:00:00');return dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})};
+const getGreeting=()=>{const h=new Date().getHours();return h<12?'Good Morning':h<17?'Good Afternoon':'Good Evening'};
 
-// ═══════════════════════════════════════════════
-// MAIN APP
-// ═══════════════════════════════════════════════
-function App() {
-  const [screen,setScreen] = useState("landing");
-  const [showCard,setShowCard] = useState(false);
-  const [mTab,setMTab] = useState("dashboard");
-  const [pTab,setPTab] = useState("dashboard");
-  const [step,setStep] = useState(0);
-  const [selectedPlan,setSelectedPlan] = useState(null);
+/* ══════════════════════════════════════════════════
+   APP
+   ══════════════════════════════════════════════════ */
+const App=()=>{
+  const [role,setRole]=useState(null);
+  const [mTab,setMTab]=useState('home');
+  const [pTab,setPTab]=useState('home');
+  const [showCard,setShowCard]=useState(false);
+  const [modal,setModal]=useState(null);
+  const [families]=useState(demoFamilies);
+  const [events,setEvents]=useState(demoEvents);
+  const [polls,setPolls]=useState(demoPolls);
+  const [messages]=useState(demoMessages);
+  const [parentPlan,setParentPlan]=useState(0);
+  const parentPaid=92.50,parentTotal=185;
+  const [pollQuestion,setPollQuestion]=useState('');
+  const [pollOptions,setPollOptions]=useState(['','']);
+  const [evTitle,setEvTitle]=useState('');
+  const [evDate,setEvDate]=useState('');
+  const [evTime,setEvTime]=useState('');
+  const [evLocation,setEvLocation]=useState('');
+  const [evType,setEvType]=useState('practice');
+  const [evNotes,setEvNotes]=useState('');
+  const [frTitle,setFrTitle]=useState('');
+  const [frAmount,setFrAmount]=useState('');
+  const [frDue,setFrDue]=useState('');
+  const [frCategory,setFrCategory]=useState('equipment');
+  const totalCollected=families.reduce((s,f)=>s+f.paid,0);
+  const totalGoal=families.reduce((s,f)=>s+f.amount,0);
+  const sortedEvents=[...events].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const mgrTabs=[{id:'home',label:'Home',icon:'home'},{id:'calendar',label:'Calendar',icon:'calendar'},{id:'decisions',label:'Decisions',icon:'poll'},{id:'families',label:'Families',icon:'users'},{id:'more',label:'More',icon:'more'}];
+  const parentTabs=[{id:'home',label:'Home',icon:'home'},{id:'calendar',label:'Calendar',icon:'calendar'},{id:'polls',label:'Polls',icon:'poll'},{id:'fund',label:'Fund',icon:'dollar'},{id:'profile',label:'Profile',icon:'user'}];
 
-  // Manager form state
-  const [teamName,setTeamName] = useState("");
-  const [mgrName,setMgrName] = useState("");
-  const [mgrEmail,setMgrEmail] = useState("");
-  const [mgrPhone,setMgrPhone] = useState("");
-  const [mgrPhoto,setMgrPhoto] = useState(null);
-  const [fundAmt,setFundAmt] = useState("1000");
+  const createPoll=()=>{if(!pollQuestion||pollOptions.filter(o=>o.trim()).length<2)return;setPolls([{id:'p'+Date.now(),question:pollQuestion,options:pollOptions.filter(o=>o.trim()).map(t=>({text:t,votes:0})),active:true,totalVoters:families.length,createdAt:new Date().toISOString().split('T')[0]},...polls]);setPollQuestion('');setPollOptions(['','']);setModal(null)};
+  const createEvent=()=>{if(!evTitle||!evDate)return;setEvents([{id:'e'+Date.now(),title:evTitle,date:evDate,time:evTime,location:evLocation,type:evType,notes:evNotes},...events]);setEvTitle('');setEvDate('');setEvTime('');setEvLocation('');setEvType('practice');setEvNotes('');setModal(null)};
 
-  // Roster builder
-  const [roster,setRoster] = useState([]);
-  const [rPlayer,setRPlayer] = useState("");
-  const [rP1Name,setRP1Name] = useState("");
-  const [rP1Email,setRP1Email] = useState("");
-  const [rP1Phone,setRP1Phone] = useState("");
-  const [rP2Name,setRP2Name] = useState("");
-  const [rP2Email,setRP2Email] = useState("");
-
-  // Modals
-  const [addFeeModal,setAddFeeModal] = useState(false);
-  const [addFeeAmt,setAddFeeAmt] = useState("");
-  const [addFeeDesc,setAddFeeDesc] = useState("");
-  const [endSeasonModal,setEndSeasonModal] = useState(false);
-  const [addPlayerModal,setAddPlayerModal] = useState(false);
-  const [sendingEmails,setSendingEmails] = useState(false);
-  const [emailsSent,setEmailsSent] = useState(false);
-  const [payMethodModal,setPayMethodModal] = useState(false);
-
-  // Parent state
-  const [parentPaySetup,setParentPaySetup] = useState(false);
-  const [hardshipOpt,setHardshipOpt] = useState(false);
-  const [hardshipAmt,setHardshipAmt] = useState("50");
-  const [showHardship,setShowHardship] = useState(false);
-  const [parentPhoto,setParentPhoto] = useState(null);
-  const [payMethod,setPayMethod] = useState(null); // 'card','debit','ach'
-  const [parentName,setParentName] = useState("Sarah Mitchell");
-  const [parentChild,setParentChild] = useState("Ethan Mitchell");
-  const [notifEmail,setNotifEmail] = useState(true);
-  const [notifSMS,setNotifSMS] = useState(false);
-  const [notifPay,setNotifPay] = useState(true);
-  const [alertPrefs,setAlertPrefs] = useState({email:true,sms:false,push:true});
-
-  // Calendar state
-  const [calEvents,setCalEvents] = useState([
-    {id:"ev1",title:"Frostbite Classic Tournament",date:"2026-03-14",time:"7:00 AM",endDate:"2026-03-16",location:"IceWorks Rink, Aston PA",type:"tournament",notes:"Full team required. Arrive 45 min early."},
-    {id:"ev2",title:"Practice — Power Play Drills",date:"2026-03-10",time:"6:30 PM",location:"Twin Ponds East",type:"practice",notes:""},
-    {id:"ev3",title:"Team Dinner — Season Kickoff",date:"2026-03-08",time:"6:00 PM",location:"Olive Garden, Route 30",type:"event",notes:"Families welcome. RSVP via poll."},
-    {id:"ev4",title:"Practice — Breakout Passing",date:"2026-03-12",time:"6:30 PM",location:"Twin Ponds East",type:"practice",notes:""},
-    {id:"ev5",title:"Away Game vs. Flyers Elite",date:"2026-03-20",time:"5:00 PM",location:"Virtua Center, Mt. Laurel NJ",type:"game",notes:"Bus departs 3:15 PM from Twin Ponds."},
-  ]);
-  const [calModal,setCalModal] = useState(false);
-  const [editEvent,setEditEvent] = useState(null);
-  const [evTitle,setEvTitle] = useState("");
-  const [evDate,setEvDate] = useState("");
-  const [evTime,setEvTime] = useState("");
-  const [evLocation,setEvLocation] = useState("");
-  const [evType,setEvType] = useState("practice");
-  const [evNotes,setEvNotes] = useState("");
-
-  // Poll state
-  const [polls,setPolls] = useState([
-    {id:"p1",question:"Team dinner restaurant preference?",options:[{text:"Olive Garden",votes:12},{text:"Chipotle",votes:5},{text:"Chick-fil-A",votes:8}],active:true,voted:false,totalVoters:25,createdAt:"2026-03-05"},
-    {id:"p2",question:"Charter bus for Frostbite Classic? ($45/family)",options:[{text:"Yes — charter bus",votes:16},{text:"No — we'll drive",votes:6}],active:true,voted:false,totalVoters:22,createdAt:"2026-03-04"},
-    {id:"p3",question:"Preferred practice time next month?",options:[{text:"6:00 PM",votes:10},{text:"6:30 PM",votes:8},{text:"7:00 PM",votes:4}],active:false,voted:true,totalVoters:22,createdAt:"2026-02-28"},
-  ]);
-  const [pollModal,setPollModal] = useState(false);
-  const [pollQuestion,setPollQuestion] = useState("");
-  const [pollOptions,setPollOptions] = useState(["",""]);
-
-  // Computed
-  const perFamily = parseInt(fundAmt||"0");
-  const totalFund = perFamily * (roster.length || 8);
-  const totalSpent = DEMO_TXNS.reduce((s,t)=>s+t.amount,0);
-  const discretionaryMax = totalFund * 0.05;
-  const discretionaryUsed = DEMO_TXNS.filter(t=>t.category==="Discretionary").reduce((s,t)=>s+t.amount,0);
-  const parentOwed = perFamily;
-  const planFee = selectedPlan!==null ? PLANS[selectedPlan].feePerInstallment * PLANS[selectedPlan].installments : 0;
-  const parentTotal = parentOwed + planFee;
-  const parentPaid = parentPaySetup ? parentTotal * 0.625 : 0;
-
-  const nav = s => { setScreen(s); window.scrollTo(0,0); };
-
-  const addToRoster = () => {
-    if(!rPlayer||!rP1Name||!rP1Email) return;
-    setRoster(prev=>[...prev,{id:Date.now(),player:rPlayer,parent1:rP1Name,parent1Email:rP1Email,parent1Phone:rP1Phone,parent2:rP2Name,parent2Email:rP2Email,
-      paidPct:0,plan:null,onTrack:null,invited:false}]);
-    setRPlayer("");setRP1Name("");setRP1Email("");setRP1Phone("");setRP2Name("");setRP2Email("");
-    setAddPlayerModal(false);
-  };
-
-  const sendInvites = async () => {
-    setSendingEmails(true);
-    const inviteBase = window.location.origin + window.location.pathname + "#invite";
-    for(const r of roster) {
-      try {
-        await sendInviteEmail(r.parent1Email, r.parent1, teamName, mgrName, fmt(perFamily), inviteBase);
-        if(r.parent2Email) await sendInviteEmail(r.parent2Email, r.parent2, teamName, mgrName, fmt(perFamily), inviteBase);
-        r.invited = true;
-      } catch(e) { console.log("Email send error:", e); r.invited = true; }
-    }
-    setRoster([...roster]);
-    setSendingEmails(false);
-    setEmailsSent(true);
-    setTimeout(()=>nav("managerDash"),1000);
-  };
-
-  // Demo family statuses for manager view
-  const familyStatuses = roster.length > 0 ? roster.map((r,i) => ({
-    ...r, paidPct:[100,100,87.5,75,62.5,50,100,37.5][i%8], plan:[1,1,8,4,8,8,2,8][i%8], onTrack:[true,true,true,true,true,false,true,false][i%8]
-  })) : [
-    {id:1,player:"Ethan Mitchell",parent1:"Sarah Mitchell",parent1Email:"sarah@email.com",paidPct:100,plan:1,onTrack:true},
-    {id:2,player:"Liam Chen",parent1:"Jennifer Chen",parent1Email:"jen@email.com",paidPct:100,plan:1,onTrack:true},
-    {id:3,player:"Aiden Kowalski",parent1:"Maria Kowalski",parent1Email:"maria@email.com",paidPct:87.5,plan:8,onTrack:true},
-    {id:4,player:"Noah Williams",parent1:"Lisa Williams",parent1Email:"lisa@email.com",paidPct:75,plan:4,onTrack:true},
-    {id:5,player:"Mason Park",parent1:"Angela Park",parent1Email:"angela@email.com",paidPct:62.5,plan:8,onTrack:true},
-    {id:6,player:"Lucas Rivera",parent1:"Carmen Rivera",parent1Email:"carmen@email.com",paidPct:50,plan:8,onTrack:false},
-    {id:7,player:"Oliver Thompson",parent1:"Diana Thompson",parent1Email:"diana@email.com",paidPct:100,plan:2,onTrack:true},
-    {id:8,player:"Elijah Brooks",parent1:"Amanda Brooks",parent1Email:"amanda@email.com",paidPct:37.5,plan:8,onTrack:false},
-  ];
-
-  const photoInputRef = useRef(null);
-  const handlePhotoUpload = (e,setter) => {
-    const file = e.target.files[0];
-    if(file){const reader=new FileReader();reader.onloadend=()=>setter(reader.result);reader.readAsDataURL(file);}
-  };
-
-  // Calendar helpers
-  const openNewEvent = () => {
-    setEditEvent(null);setEvTitle("");setEvDate("");setEvTime("");setEvLocation("");setEvType("practice");setEvNotes("");setCalModal(true);
-  };
-  const openEditEvent = (ev) => {
-    setEditEvent(ev);setEvTitle(ev.title);setEvDate(ev.date);setEvTime(ev.time);setEvLocation(ev.location||"");setEvType(ev.type);setEvNotes(ev.notes||"");setCalModal(true);
-  };
-  const saveEvent = () => {
-    if(!evTitle||!evDate) return;
-    const data = {title:evTitle,date:evDate,time:evTime,location:evLocation,type:evType,notes:evNotes};
-    if(editEvent) {
-      setCalEvents(prev=>prev.map(e=>e.id===editEvent.id?{...e,...data}:e));
-    } else {
-      setCalEvents(prev=>[...prev,{id:"ev"+Date.now(),...data}]);
-    }
-    setCalModal(false);
-  };
-  const deleteEvent = (id) => setCalEvents(prev=>prev.filter(e=>e.id!==id));
-
-  const sortedEvents = [...calEvents].sort((a,b)=>a.date.localeCompare(b.date));
-  const eventTypeColor = t => ({practice:C.cyan,game:C.accent,tournament:C.orange,event:C.steel}[t]||C.textMuted);
-  const eventTypeLabel = t => ({practice:"Practice",game:"Game",tournament:"Tournament",event:"Event"}[t]||t);
-  const fmtEventDate = d => {try{return new Date(d+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});}catch(e){return d;}};
-
-  // Poll helpers
-  const createPoll = () => {
-    const opts = pollOptions.filter(o=>o.trim());
-    if(!pollQuestion||opts.length<2) return;
-    setPolls(prev=>[{id:"p"+Date.now(),question:pollQuestion,options:opts.map(t=>({text:t,votes:0})),active:true,voted:false,totalVoters:0,createdAt:new Date().toISOString().slice(0,10)},...prev]);
-    setPollQuestion("");setPollOptions(["",""]);setPollModal(false);
-  };
-  const votePoll = (pollId,optIdx) => {
-    setPolls(prev=>prev.map(p=>{
-      if(p.id!==pollId||p.voted) return p;
-      const opts = p.options.map((o,i)=>i===optIdx?{...o,votes:o.votes+1}:o);
-      return {...p,options:opts,voted:true,totalVoters:p.totalVoters+1};
-    }));
-  };
-  const closePoll = (pollId) => setPolls(prev=>prev.map(p=>p.id===pollId?{...p,active:false}:p));
-
-  // ═══ LANDING ═══
-  if(screen==="landing") return (
-    <div style={{minHeight:"100vh",background:C.gradient,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:32,position:"relative",overflow:"hidden"}}>
-      <div style={{position:"absolute",top:-100,right:-100,width:400,height:400,borderRadius:"50%",background:"radial-gradient(circle,rgba(0,212,170,0.06) 0%,transparent 70%)"}} />
-      <div style={{position:"absolute",bottom:-80,left:-80,width:300,height:300,borderRadius:"50%",background:"radial-gradient(circle,rgba(0,180,216,0.05) 0%,transparent 70%)"}} />
-      <div className="fade-in" style={{textAlign:"center",color:C.white,maxWidth:400,position:"relative",zIndex:1}}>
-        <div style={{width:72,height:72,background:"rgba(255,255,255,0.08)",borderRadius:16,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 28px",border:"1px solid rgba(255,255,255,0.1)"}}>
-          <span style={{fontSize:28,fontWeight:900,color:C.accent}}>PF</span>
+  /* ═══ SPLASH ═══ */
+  if(!role)return(
+    <div style={{minHeight:'100vh',background:C.bgDark,display:'flex',alignItems:'center',justifyContent:'center',padding:24}} className="af">
+      <div style={{maxWidth:400,width:'100%',textAlign:'center'}}>
+        <div style={{width:64,height:64,borderRadius:16,background:C.accent,margin:'0 auto 24px',display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{fontSize:28,fontWeight:900,color:C.text}}>PF</span></div>
+        <h1 style={{fontSize:32,fontWeight:300,color:C.white,letterSpacing:'-0.02em',marginBottom:8}}>PayFair</h1>
+        <p style={{color:'rgba(255,255,255,0.5)',fontSize:14,marginBottom:48}}>Team Finance Platform</p>
+        <div style={{background:C.bgCardDark,border:'1px solid rgba(255,255,255,0.05)',borderRadius:16,padding:24,marginBottom:16,textAlign:'left'}}>
+          <h2 style={{color:C.white,fontSize:18,fontWeight:400,marginBottom:12}}>Welcome</h2>
+          <p style={{color:'rgba(255,255,255,0.5)',fontSize:13,lineHeight:1.6,marginBottom:16}}>Manage team finances, track payments, and coordinate with families — all in one place.</p>
+          {['Manage team budgets and expenses','Track family payment progress','Coordinate schedules and events'].map((t,i)=><div key={i} style={{display:'flex',alignItems:'center',gap:10,marginBottom:6}}><div style={{width:4,height:4,borderRadius:4,background:C.accent,flexShrink:0}}/><span style={{color:'rgba(255,255,255,0.4)',fontSize:12}}>{t}</span></div>)}
         </div>
-        <h1 style={{fontSize:42,fontWeight:900,margin:"0 0 12px",letterSpacing:"-0.04em",lineHeight:1}}>PayFair</h1>
-        <p style={{fontSize:16,opacity:0.6,margin:"0 0 48px",lineHeight:1.6,fontWeight:500}}>The modern platform for team slush funds.</p>
-        <button onClick={()=>nav("authChoice")} style={{width:"100%",padding:"16px 28px",background:C.white,color:C.navy,border:"none",borderRadius:10,fontSize:16,fontWeight:800,cursor:"pointer",boxShadow:"0 4px 20px rgba(0,0,0,0.2)",letterSpacing:"-0.01em"}}>Get Started</button>
-        <button onClick={()=>nav("authChoice")} style={{background:"none",border:"none",color:"rgba(255,255,255,0.4)",marginTop:20,fontSize:14,cursor:"pointer",fontWeight:600}}>Already have an account? <span style={{color:C.accent}}>Sign In</span></button>
-
-        <div style={{marginTop:64,display:"flex",justifyContent:"center",gap:40}}>
-          {[["$0","Out of Pocket"],["100%","Transparent"],["Flex","Pay Plans"]].map(([v,l],i)=>(
-            <div key={i} style={{textAlign:"center"}}>
-              <div style={{fontSize:24,fontWeight:900,letterSpacing:"-0.02em",color:C.accent}}>{v}</div>
-              <div style={{fontSize:11,marginTop:4,opacity:0.4,fontWeight:600,letterSpacing:"0.04em"}}>{l}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Moat Preview */}
-        <div style={{marginTop:48,textAlign:"left",background:"rgba(255,255,255,0.05)",borderRadius:12,padding:20,border:"1px solid rgba(255,255,255,0.08)"}}>
-          <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:C.accent,marginBottom:12}}>How It Works</div>
-          {[
-            ["Virtual Card","Manager spends full fund immediately — no personal card required"],
-            ["Smart Float","Full fund access even while families are on payment plans"],
-            ["Flex Pay","1, 2, 4, or 8 installments with small fixed convenience fees"],
-            ["Transparency","Real-time accounting visible to all parents and managers"],
-          ].map(([t,d],i)=>(
-            <div key={i} style={{display:"flex",gap:12,marginBottom:i<3?12:0,alignItems:"flex-start"}}>
-              <div style={{width:6,height:6,borderRadius:3,background:C.accent,marginTop:7,flexShrink:0}} />
-              <div><span style={{fontWeight:700,fontSize:13}}>{t}</span><span style={{fontSize:13,opacity:0.5,fontWeight:400}}> — {d}</span></div>
-            </div>
-          ))}
-        </div>
+        <button onClick={()=>setRole('manager')} style={{width:'100%',padding:16,borderRadius:12,background:C.white,color:C.text,border:'none',fontSize:15,fontWeight:600,cursor:'pointer',marginBottom:12,display:'flex',alignItems:'center',justifyContent:'center',gap:10}}>
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M19.6 10.23c0-.71-.06-1.39-.18-2.05H10v3.87h5.38a4.6 4.6 0 01-2 3.02v2.51h3.23c1.89-1.74 2.98-4.3 2.98-7.35z" fill="#4285F4"/><path d="M10 20c2.7 0 4.96-.9 6.62-2.42l-3.23-2.51c-.9.6-2.04.95-3.39.95-2.6 0-4.81-1.76-5.59-4.12H1.06v2.59A10 10 0 0010 20z" fill="#34A853"/><path d="M4.4 11.9c-.2-.6-.31-1.24-.31-1.9s.11-1.3.31-1.9V5.51H1.06A10 10 0 000 10c0 1.61.39 3.14 1.06 4.49l3.35-2.59z" fill="#FBBC05"/><path d="M10 3.98c1.47 0 2.79.5 3.82 1.5l2.87-2.87C14.96.99 12.7 0 10 0 6.09 0 2.71 2.24 1.06 5.51l3.35 2.59C5.19 5.74 7.4 3.98 10 3.98z" fill="#EA4335"/></svg>
+          Sign in as Team Manager
+        </button>
+        <button onClick={()=>setRole('parent')} style={{width:'100%',padding:16,borderRadius:12,background:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.8)',border:'1px solid rgba(255,255,255,0.1)',fontSize:15,fontWeight:500,cursor:'pointer'}}>I'm a Parent / Family Member</button>
+        <p style={{color:'rgba(255,255,255,0.25)',fontSize:11,marginTop:24}}>Secure authentication powered by Google</p>
       </div>
     </div>
   );
 
-  // ═══ AUTH CHOICE ═══
-  if(screen==="authChoice") return (
-    <div style={{minHeight:"100vh",background:C.bg,padding:24}}>
-      <button onClick={()=>nav("landing")} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:6,color:C.textMuted,marginBottom:40,fontSize:14,fontWeight:600}}><Icon name="back" size={18} color={C.textMuted} /> Back</button>
-      <div className="fade-in" style={{maxWidth:400,margin:"0 auto"}}>
-        <h2 style={{...T.h1,margin:"0 0 8px"}}>Welcome</h2>
-        <p style={{...T.body,margin:"0 0 36px"}}>Choose how you'd like to continue.</p>
-        <Card style={{marginBottom:12,padding:"20px 22px",cursor:"pointer"}} onClick={()=>nav("managerSetup")}>
-          <div style={{display:"flex",alignItems:"center",gap:16}}>
-            <div style={{width:48,height:48,borderRadius:10,background:C.gradientBtn,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="shield" size={22} color={C.white}/></div>
-            <div style={{flex:1}}>
-              <div style={{fontWeight:800,fontSize:16,color:C.text}}>I'm a Team Manager</div>
-              <div style={{color:C.textMuted,fontSize:13,marginTop:2,fontWeight:500}}>Set up your team's slush fund</div>
-            </div>
-            <Icon name="arrowRight" size={18} color={C.textMuted}/>
-          </div>
-        </Card>
-        <Card style={{marginBottom:12,padding:"20px 22px",cursor:"pointer"}} onClick={()=>{setSelectedPlan(null);setParentPaySetup(false);nav("parentOnboard");}}>
-          <div style={{display:"flex",alignItems:"center",gap:16}}>
-            <div style={{width:48,height:48,borderRadius:10,background:C.bg,display:"flex",alignItems:"center",justifyContent:"center",border:`1px solid ${C.border}`}}><Icon name="users" size={22} color={C.steel}/></div>
-            <div style={{flex:1}}>
-              <div style={{fontWeight:800,fontSize:16,color:C.text}}>I'm a Parent</div>
-              <div style={{color:C.textMuted,fontSize:13,marginTop:2,fontWeight:500}}>Accept an invite & manage payments</div>
-            </div>
-            <Icon name="arrowRight" size={18} color={C.textMuted}/>
-          </div>
-        </Card>
+  /* ═══ EVENT DETAIL MODAL (shared) ═══ */
+  const EventDetailModal=()=>modal&&modal.type==='eventDetail'?(
+    <Modal title={modal.event.title} subtitle={fmtDate(modal.event.date)+' · '+modal.event.time} onClose={()=>setModal(null)}>
+      <Badge color={eventTypeColor(modal.event.type)}>{eventTypeLabel(modal.event.type)}</Badge>
+      {modal.event.location&&<div style={{marginTop:16,padding:16,borderRadius:12,background:C.bgSec}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}><Icon name="mapPin" size={16} color={C.textSec}/><span style={{fontSize:14,fontWeight:500}}>{modal.event.location}</span></div>
+        <a href={'https://maps.google.com/?q='+encodeURIComponent(modal.event.location)} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:6,padding:'10px 16px',borderRadius:10,background:C.bgDark,color:C.white,fontSize:13,fontWeight:600,textDecoration:'none'}}><Icon name="arrowRight" size={14} color={C.white}/> Get Directions</a>
+      </div>}
+      {modal.event.notes&&<div style={{marginTop:16,padding:14,borderRadius:12,border:'1px solid '+C.border}}><div style={{fontSize:12,fontWeight:600,color:C.textMuted,marginBottom:4}}>Notes</div><div style={{fontSize:14,color:C.textSec}}>{modal.event.notes}</div></div>}
+    </Modal>
+  ):null;
 
-        {/* Moat / Investor Section */}
-        <Card style={{marginTop:24,padding:20,background:C.offWhite,cursor:"pointer"}} onClick={()=>nav("moat")}>
-          <div style={{display:"flex",alignItems:"center",gap:12}}>
-            <div style={{width:48,height:48,borderRadius:10,background:C.accentGlow,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="zap" size={22} color={C.accent}/></div>
-            <div style={{flex:1}}>
-              <div style={{fontWeight:800,fontSize:16,color:C.text}}>Our Fintech Moat</div>
-              <div style={{color:C.textMuted,fontSize:13,marginTop:2,fontWeight:500}}>How PayFair creates defensible value</div>
-            </div>
-            <Icon name="arrowRight" size={18} color={C.accent}/>
-          </div>
-        </Card>
+  /* ═══ MESSAGES MODAL (shared) ═══ */
+  const MessagesModal=()=>modal==='messages'?(
+    <Modal title="Messages" onClose={()=>setModal(null)}>
+      {messages.map(m=><div key={m.id} style={{display:'flex',gap:12,padding:'14px 0',borderBottom:'1px solid '+C.border}}><Avatar name={m.from} size={40}/><div style={{flex:1}}><div style={{display:'flex',justifyContent:'space-between'}}><span style={{fontSize:14,fontWeight:m.unread?700:500}}>{m.from}</span><span style={{fontSize:11,color:C.textMuted}}>{m.time}</span></div><div style={{fontSize:13,color:C.textSec,marginTop:2}}>{m.preview}</div></div>{m.unread&&<div style={{width:8,height:8,borderRadius:8,background:C.accent,flexShrink:0,marginTop:6}}/>}</div>)}
+    </Modal>
+  ):null;
 
-        <div style={{textAlign:"center",marginTop:32,display:"flex",justifyContent:"center",gap:12}}>
-          <Btn variant="outline" small onClick={()=>nav("managerSetup")} style={{borderRadius:8}}>
-            <svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-            Google SSO
-          </Btn>
-          <Btn variant="outline" small onClick={()=>nav("managerSetup")} style={{borderRadius:8}}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill={C.text}><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-            Apple SSO
-          </Btn>
+  /* ═══ MANAGER ═══ */
+  if(role==='manager')return(
+    <div style={{maxWidth:428,margin:'0 auto',minHeight:'100vh',background:C.bg,position:'relative'}}>
+      <div style={{padding:'16px 20px 12px',display:'flex',justifyContent:'space-between',alignItems:'center',position:'sticky',top:0,background:'rgba(255,255,255,0.95)',backdropFilter:'blur(20px)',zIndex:40}}>
+        <div><div style={{fontSize:12,color:C.textMuted,fontWeight:500}}>{getGreeting()}</div><div style={{fontSize:20,fontWeight:700}}>Team Manager</div></div>
+        <div style={{display:'flex',gap:8}}>
+          <button onClick={()=>setModal('notify')} style={{width:40,height:40,borderRadius:12,background:C.bgSec,border:'none',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',position:'relative'}}><Icon name="bell" size={18} color={C.textSec}/><div style={{position:'absolute',top:8,right:8,width:8,height:8,borderRadius:8,background:C.red,border:'2px solid white'}}/></button>
+          <button onClick={()=>setModal('action')} style={{width:40,height:40,borderRadius:12,background:C.accent,border:'none',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}><Icon name="plus" size={18} color={C.text}/></button>
         </div>
       </div>
+      <div style={{padding:'0 20px 100px',paddingTop:8}}>
+
+        {mTab==='home'&&<div className="af">
+          <VirtualCard balance={totalCollected} show={showCard} onToggle={()=>setShowCard(!showCard)}/>
+          <div style={{display:'flex',gap:10,marginTop:16}}><StatCard label="Total Fund" value={'$'+totalGoal.toLocaleString()} change={12.5} dark/><StatCard label="Spent" value={'$'+(totalGoal-totalCollected).toLocaleString()} change={-8.2} dark/><StatCard label="Remaining" value={'$'+totalCollected.toLocaleString()} change={4.3} dark/></div>
+          <div style={{marginTop:20}}><CollectionProgress collected={totalCollected} total={totalGoal}/></div>
+          <div style={{marginTop:24}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}><div style={{fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:C.textMuted}}>Team Families</div><button onClick={()=>setMTab('families')} style={{fontSize:12,fontWeight:600,color:C.textSec,background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>View All <Icon name="chevRight" size={14} color={C.textSec}/></button></div>{families.slice(0,4).map(f=><FamilyItem key={f.id} name={f.name} player={f.player} amount={f.paid} status={f.status}/>)}</div>
+          <div style={{display:'flex',justifyContent:'center',gap:16,marginTop:20,padding:'8px 0'}}><button style={{background:'none',border:'none',cursor:'pointer',fontSize:12,color:C.textMuted,display:'flex',alignItems:'center',gap:4}}><Icon name="heart" size={13} color={C.textMuted}/> Help a teammate</button><span style={{color:C.border}}>|</span><button style={{background:'none',border:'none',cursor:'pointer',fontSize:12,color:C.textMuted,display:'flex',alignItems:'center',gap:4}}><Icon name="shield" size={13} color={C.textMuted}/> Need assistance?</button></div>
+        </div>}
+
+        {mTab==='calendar'&&<div className="af"><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}><div style={{fontSize:18,fontWeight:700}}>Calendar</div><Btn variant="primary" small onClick={()=>setModal('event')}><Icon name="plus" size={14}/> New Event</Btn></div>{sortedEvents.map(ev=><Card key={ev.id} style={{marginBottom:12,padding:16}} onClick={()=>setModal({type:'eventDetail',event:ev})}><div style={{display:'flex',alignItems:'flex-start',gap:14}}><div style={{width:48,height:48,borderRadius:12,background:eventTypeColor(ev.type)+'15',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon name={ev.type==='game'?'target':ev.type==='tournament'?'trophy':'calendar'} size={20} color={eventTypeColor(ev.type)}/></div><div style={{flex:1}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}><div><div style={{fontSize:15,fontWeight:600}}>{ev.title}</div><div style={{fontSize:12,color:C.textMuted,marginTop:2}}>{fmtDate(ev.date)} · {ev.time}</div></div><Badge color={eventTypeColor(ev.type)}>{eventTypeLabel(ev.type)}</Badge></div>{ev.location&&<div style={{fontSize:12,color:C.textSec,marginTop:6,display:'flex',alignItems:'center',gap:4}}><Icon name="mapPin" size={12} color={C.textMuted}/>{ev.location}</div>}</div></div></Card>)}</div>}
+
+        {mTab==='decisions'&&<div className="af"><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}><div><div style={{fontSize:18,fontWeight:700}}>Decisions</div><div style={{fontSize:13,color:C.textMuted}}>Poll your team, then make the call.</div></div><Btn variant="primary" small onClick={()=>setModal('poll')}><Icon name="plus" size={14}/> New</Btn></div>
+          {polls.filter(p=>p.active).map(p=>{const totalV=p.options.reduce((s,o)=>s+o.votes,0);const rs=families.length||6;const rr=Math.min(Math.round(totalV/rs*100),100);const sorted=[...p.options].sort((a,b)=>b.votes-a.votes);const leader=sorted[0];const lp=totalV>0?Math.round(leader.votes/totalV*100):0;const decisive=lp>=60&&rr>=50;return(<Card key={p.id} style={{marginTop:16,padding:20}}><div style={{fontSize:15,fontWeight:600,marginBottom:4}}>{p.question}</div><div style={{fontSize:12,color:C.textMuted,marginBottom:16}}>Created {p.createdAt}</div><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}><span style={{fontSize:12,fontWeight:600,color:C.textSec}}>{totalV} of {rs} families responded</span><span style={{fontSize:12,fontWeight:700,color:rr>=50?C.green:C.orange}}>{rr}%</span></div><ProgressBar value={rr} color={rr>=50?C.green:C.orange} height={4}/><div style={{marginTop:16,display:'flex',flexDirection:'column',gap:10}}>{p.options.map((opt,i)=>{const pct=totalV>0?Math.round(opt.votes/totalV*100):0;const isL=opt.text===leader.text&&totalV>0;return(<div key={i}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}><div style={{display:'flex',alignItems:'center',gap:6}}>{isL&&<div style={{width:8,height:8,borderRadius:8,background:C.green}}/>}<span style={{fontSize:14,fontWeight:isL?700:500,color:isL?C.text:C.textSec}}>{opt.text}</span></div><span style={{fontSize:isL?18:14,fontWeight:isL?800:600,color:isL?C.text:C.textMuted}}>{pct}%</span></div><ProgressBar value={pct} color={isL?C.teal:'#E4E4E7'} height={6}/></div>)})}</div><div style={{marginTop:16,padding:'12px 16px',borderRadius:10,background:(decisive?C.green:C.orange)+'10',display:'flex',justifyContent:'space-between',alignItems:'center'}}><span style={{fontSize:13,fontWeight:600,color:decisive?C.green:C.orange}}>{decisive?'Clear leader — ready to decide':'Waiting for more responses...'}</span>{decisive&&<Btn variant="dark" small onClick={()=>setPolls(polls.map(pp=>pp.id===p.id?{...pp,active:false,decided:leader.text}:pp))}>Decide</Btn>}</div></Card>)})}
+          {polls.filter(p=>!p.active).length>0&&<div style={{marginTop:28}}><div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.1em',color:C.textMuted,marginBottom:12}}>Decided</div>{polls.filter(p=>!p.active).map(p=><Card key={p.id} style={{marginBottom:10,padding:16,opacity:0.7}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><div><div style={{fontSize:14,fontWeight:600}}>{p.question}</div><div style={{fontSize:12,color:C.green,fontWeight:600,marginTop:2}}>✓ {p.decided}</div></div><Badge color={C.green}>Done</Badge></div></Card>)}</div>}
+        </div>}
+
+        {mTab==='families'&&<div className="af"><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}><div style={{fontSize:18,fontWeight:700}}>Families</div><Btn variant="outline" small><Icon name="plus" size={14}/> Add</Btn></div><div style={{display:'flex',gap:8,marginBottom:20}}><Badge color={C.green}>{families.filter(f=>f.status==='paid').length} Paid</Badge><Badge color={C.orange}>{families.filter(f=>f.status==='partial').length} Partial</Badge><Badge color={C.red}>{families.filter(f=>f.status==='pending').length} Pending</Badge></div>{families.map(f=><FamilyItem key={f.id} name={f.name} player={f.player} amount={f.paid} status={f.status}/>)}</div>}
+
+        {mTab==='more'&&<div className="af"><div style={{fontSize:18,fontWeight:700,marginBottom:20}}>More</div>{[{icon:'messageCircle',label:'Messages',badge:messages.filter(m=>m.unread).length,action:()=>setModal('messages')},{icon:'users',label:'Manage Roster',action:()=>setMTab('families')},{icon:'dollar',label:'Request Funds',action:()=>setModal('fund')},{icon:'activity',label:'Transaction History',action:()=>setMTab('home')},{icon:'settings',label:'Team Settings',action:()=>alert('Team settings — coming soon')},{icon:'shield',label:'Hardship Fund',action:()=>alert('Hardship assistance — coming soon')}].map((item,i)=><button key={i} onClick={item.action} style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 0',background:'none',border:'none',borderBottom:'1px solid '+C.border,cursor:'pointer'}}><div style={{display:'flex',alignItems:'center',gap:14}}><div style={{width:40,height:40,borderRadius:12,background:C.bgSec,display:'flex',alignItems:'center',justifyContent:'center'}}><Icon name={item.icon} size={18} color={C.textSec}/></div><span style={{fontSize:15,fontWeight:500,color:C.text}}>{item.label}</span></div><div style={{display:'flex',alignItems:'center',gap:8}}>{item.badge>0&&<div style={{width:20,height:20,borderRadius:20,background:C.red,color:C.white,fontSize:11,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}}>{item.badge}</div>}<Icon name="chevRight" size={16} color={C.textMuted}/></div></button>)}<button onClick={()=>setRole(null)} style={{width:'100%',padding:16,marginTop:24,borderRadius:12,background:C.bgSec,border:'none',color:C.textSec,fontSize:14,fontWeight:500,cursor:'pointer'}}>Switch Role / Sign Out</button></div>}
+      </div>
+      <BottomNav tabs={mgrTabs} active={mTab} onTab={setMTab}/>
+
+      {modal==='action'&&<Modal title="Quick Actions" subtitle="What would you like to do?" onClose={()=>setModal(null)}><div style={{display:'flex',flexDirection:'column',gap:10}}>{[{icon:'send',label:'Send Message',sub:'Message families or admins',action:()=>setModal('messages')},{icon:'calendar',label:'Create Event',sub:'Add to team calendar',action:()=>setModal('event')},{icon:'dollar',label:'Request Funds',sub:'Send payment request',action:()=>setModal('fund')},{icon:'poll',label:'New Decision',sub:'Poll the team',action:()=>setModal('poll')},{icon:'users',label:'Manage Roster',sub:'Add or edit players',action:()=>setModal(null)}].map((a,i)=><button key={i} onClick={a.action} style={{display:'flex',alignItems:'center',gap:14,padding:16,borderRadius:14,background:C.bgSec,border:'none',cursor:'pointer',width:'100%',textAlign:'left'}}><div style={{width:44,height:44,borderRadius:12,background:C.accent+'20',display:'flex',alignItems:'center',justifyContent:'center'}}><Icon name={a.icon} size={20} color={C.text}/></div><div><div style={{fontSize:15,fontWeight:600}}>{a.label}</div><div style={{fontSize:12,color:C.textMuted}}>{a.sub}</div></div></button>)}</div></Modal>}
+
+      {modal==='poll'&&<Modal title="New Decision" subtitle="Poll your team to make the call" onClose={()=>setModal(null)}><InputField label="Question" value={pollQuestion} onChange={setPollQuestion} placeholder="What do you need to decide?" icon="messageCircle"/><div style={{fontSize:12,fontWeight:600,color:C.textSec,marginBottom:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>Options</div>{pollOptions.map((opt,i)=><div key={i} style={{display:'flex',gap:8,marginBottom:8}}><input value={opt} onChange={e=>{const o=[...pollOptions];o[i]=e.target.value;setPollOptions(o)}} placeholder={'Option '+(i+1)} style={{flex:1,padding:'12px 14px',borderRadius:10,border:'1px solid '+C.border,fontSize:14}}/>{i>1&&<button onClick={()=>setPollOptions(pollOptions.filter((_,j)=>j!==i))} style={{width:40,borderRadius:10,background:C.bgSec,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}><Icon name="x" size={14} color={C.textMuted}/></button>}</div>)}{pollOptions.length<5&&<button onClick={()=>setPollOptions([...pollOptions,''])} style={{width:'100%',padding:10,borderRadius:10,border:'1px dashed '+C.border,background:'none',cursor:'pointer',fontSize:13,color:C.textMuted,marginBottom:20}}>+ Add option</button>}<Btn variant="primary" full onClick={createPoll} disabled={!pollQuestion||pollOptions.filter(o=>o.trim()).length<2}><Icon name="send" size={16}/> Push to Team</Btn></Modal>}
+
+      {modal==='event'&&<Modal title="Create Event" subtitle="Add to team calendar" onClose={()=>setModal(null)}><div style={{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap'}}>{['practice','game','tournament','event'].map(t=><button key={t} onClick={()=>setEvType(t)} style={{padding:'8px 14px',borderRadius:20,border:'1px solid '+(evType===t?eventTypeColor(t):C.border),background:evType===t?eventTypeColor(t)+'15':'transparent',fontSize:13,fontWeight:evType===t?600:400,color:evType===t?eventTypeColor(t):C.textSec,cursor:'pointer'}}>{eventTypeLabel(t)}</button>)}</div><InputField label="Event Title" value={evTitle} onChange={setEvTitle} placeholder="e.g., Practice — Power Play Drills"/><div style={{display:'flex',gap:10}}><div style={{flex:1}}><InputField label="Date" value={evDate} onChange={setEvDate} type="date"/></div><div style={{flex:1}}><InputField label="Time" value={evTime} onChange={setEvTime} type="time"/></div></div><InputField label="Location" value={evLocation} onChange={setEvLocation} placeholder="Venue name and address" icon="mapPin"/><InputField label="Notes" value={evNotes} onChange={setEvNotes} placeholder="Any additional details"/><Btn variant="primary" full onClick={createEvent} disabled={!evTitle||!evDate}>Create Event</Btn></Modal>}
+
+      {modal==='fund'&&<Modal title="Request Funds" subtitle="Send payment request to families" onClose={()=>setModal(null)}><InputField label="Title" value={frTitle} onChange={setFrTitle} placeholder="e.g., Tournament Entry Fee"/><InputField label="Amount per family" value={frAmount} onChange={setFrAmount} placeholder="$0.00" type="number" icon="dollar"/><InputField label="Due Date" value={frDue} onChange={setFrDue} type="date"/><div style={{fontSize:12,fontWeight:600,color:C.textSec,marginBottom:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>Category</div><div style={{display:'flex',gap:8,marginBottom:20,flexWrap:'wrap'}}>{['equipment','tournament','travel','uniforms','facility','other'].map(c=><button key={c} onClick={()=>setFrCategory(c)} style={{padding:'8px 14px',borderRadius:20,border:'1px solid '+(frCategory===c?C.accent:C.border),background:frCategory===c?C.accent+'15':'transparent',fontSize:13,fontWeight:frCategory===c?600:400,color:frCategory===c?C.text:C.textSec,cursor:'pointer',textTransform:'capitalize'}}>{c}</button>)}</div>{frAmount&&<div style={{padding:14,borderRadius:12,background:C.accent+'10',marginBottom:20}}><div style={{fontSize:12,color:C.textSec}}>Total collection from {families.length} families</div><div style={{fontSize:22,fontWeight:800}}>${(parseFloat(frAmount||0)*families.length).toFixed(2)}</div></div>}<Btn variant="primary" full disabled={!frTitle||!frAmount} onClick={()=>{setFrTitle('');setFrAmount('');setFrDue('');setFrCategory('equipment');setModal(null)}}>Send Request</Btn></Modal>}
+
+      {modal==='notify'&&<Modal title="Notifications" subtitle="3 new updates" onClose={()=>setModal(null)}>{[{icon:'dollar',text:'Sarah Martinez paid $185.00',sub:'Tournament Fee — Paid in full',time:'2h ago',color:C.green},{icon:'calendar',text:'Frostbite Classic — schedule posted',sub:'March 14, 7:00 AM · IceWorks Rink',time:'5h ago',color:C.orange},{icon:'poll',text:'2 new poll responses received',sub:'Team dinner restaurant preference',time:'1d ago',color:C.blue}].map((n,i)=><div key={i} style={{display:'flex',gap:12,padding:'14px 0',borderBottom:'1px solid '+C.border}}><div style={{width:40,height:40,borderRadius:12,background:n.color+'15',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon name={n.icon} size={18} color={n.color}/></div><div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{n.text}</div><div style={{fontSize:12,color:C.textMuted,marginTop:2}}>{n.sub}</div></div><span style={{fontSize:11,color:C.textMuted,flexShrink:0}}>{n.time}</span></div>)}</Modal>}
+
+      <MessagesModal/><EventDetailModal/>
     </div>
   );
 
-  // ═══ FINTECH MOAT PAGE ═══
-  if(screen==="moat") return (
-    <div style={{minHeight:"100vh",background:C.bg,padding:24}}>
-      <button onClick={()=>nav("authChoice")} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:6,color:C.textMuted,marginBottom:32,fontSize:14,fontWeight:600}}><Icon name="back" size={18} color={C.textMuted}/> Back</button>
-      <div className="fade-in" style={{maxWidth:520,margin:"0 auto"}}>
-        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}>
-          <div style={{width:48,height:48,borderRadius:10,background:C.gradientBtn,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:20,fontWeight:900,color:C.accent}}>PF</span></div>
-          <div><h2 style={{...T.h2,margin:0}}>The PayFair Moat</h2><p style={{color:C.textMuted,fontSize:13,fontWeight:600,marginTop:2}}>Defensible Fintech Infrastructure</p></div>
-        </div>
-
-        {/* Moat 1: The Float */}
-        <Card style={{marginBottom:14,borderLeft:`4px solid ${C.accent}`}}>
-          <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
-            <div style={{width:40,height:40,borderRadius:10,background:C.accentGlow,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="zap" size={20} color={C.accent}/></div>
-            <div>
-              <h3 style={{...T.h3,margin:"0 0 8px",fontSize:16}}>The Float (Primary Moat)</h3>
-              <p style={{fontSize:13,color:C.textSec,lineHeight:1.6,fontWeight:500}}>
-                Managers access 100% of the slush fund immediately — even while families are still on payment plans. If 20 families each owe $1,000, the manager can tap the full $20,000 for early-season tournaments while only 50% has been collected.
-              </p>
-              <div style={{marginTop:12,background:C.offWhite,borderRadius:8,padding:12,border:`1px solid ${C.border}`}}>
-                <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase",color:C.accent,marginBottom:8}}>How It Works</div>
-                <p style={{fontSize:12,color:C.textSec,lineHeight:1.6}}>
-                  Powered by Stripe Treasury + Issuing APIs. The platform's aggregate deposits across all teams create a pooled reserve that backs the float. No banking license needed. The incoming payment stream (installments + fees) provides predictable cash flow that de-risks the advance.
-                </p>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Moat 2: BNPL */}
-        <Card style={{marginBottom:14,borderLeft:`4px solid ${C.cyan}`}}>
-          <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
-            <div style={{width:40,height:40,borderRadius:10,background:"rgba(0,180,216,0.1)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="layers" size={20} color={C.cyan}/></div>
-            <div>
-              <h3 style={{...T.h3,margin:"0 0 8px",fontSize:16}}>BNPL Without Credit (Moat #2)</h3>
-              <p style={{fontSize:13,color:C.textSec,lineHeight:1.6,fontWeight:500}}>
-                Fixed convenience fees ($2, $4, $8 per installment) eliminate the appearance and regulatory burden of consumer credit. It's a service fee, not interest. This positions PayFair outside TILA/Reg Z while offering the same flexibility.
-              </p>
-              <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap"}}>
-                {PLANS.slice(1).map((p,i)=>(
-                  <div key={i} style={{background:C.offWhite,borderRadius:8,padding:"8px 14px",border:`1px solid ${C.border}`,fontSize:12}}>
-                    <div style={{fontWeight:800,color:C.text}}>{p.installments}×</div>
-                    <div style={{color:C.textMuted,fontWeight:600}}>+${p.feePerInstallment}/ea</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Moat 3: Network Effect */}
-        <Card style={{marginBottom:14,borderLeft:`4px solid ${C.orange}`}}>
-          <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
-            <div style={{width:40,height:40,borderRadius:10,background:C.orangeBg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="trending" size={20} color={C.orange}/></div>
-            <div>
-              <h3 style={{...T.h3,margin:"0 0 8px",fontSize:16}}>Network + Data Moat (#3)</h3>
-              <p style={{fontSize:13,color:C.textSec,lineHeight:1.6,fontWeight:500}}>
-                Every team onboarded brings 15-25 families. Each family plays multiple sports/seasons. The payment behavior data creates an AI-driven risk model that improves the float pricing over time. Competing requires both the fintech infrastructure AND the behavioral dataset.
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        {/* Moat 4: Team Operating System */}
-        <Card style={{marginBottom:14,borderLeft:`4px solid ${C.green}`}}>
-          <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
-            <div style={{width:40,height:40,borderRadius:10,background:C.greenBg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Icon name="layers" size={20} color={C.green}/></div>
-            <div>
-              <h3 style={{...T.h3,margin:"0 0 8px",fontSize:16}}>Team Operating System (#4)</h3>
-              <p style={{fontSize:13,color:C.textSec,lineHeight:1.6,fontWeight:500}}>
-                The slush fund is the wedge — but the real play is owning the full team stack. Equipment ordering, tournament travel, fundraising, and compliance all flow through PayFair's financial core. Every feature deepens switching costs. Managers see on-track/off-track only — never personal details — building trust that retains teams season after season.
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        {/* Expansion */}
-        <Card style={{background:C.gradientBtn,color:C.white}}>
-          <h3 style={{fontSize:16,fontWeight:800,margin:"0 0 12px",color:C.white}}>Expansion Vector</h3>
-          <p style={{fontSize:13,lineHeight:1.6,opacity:0.8,fontWeight:500}}>
-            The slush fund is the wedge. Once teams are on PayFair, we replace poorly executed features from TeamSnap and SportsEngine: calendars, scheduling, locations, directions. Each feature deepens the moat by increasing switching costs. The financial layer makes PayFair the system of record — not a nice-to-have.
-          </p>
-        </Card>
+  /* ═══ PARENT ═══ */
+  if(role==='parent')return(
+    <div style={{maxWidth:428,margin:'0 auto',minHeight:'100vh',background:C.bg,position:'relative'}}>
+      <div style={{padding:'16px 20px 12px',display:'flex',justifyContent:'space-between',alignItems:'center',position:'sticky',top:0,background:'rgba(255,255,255,0.95)',backdropFilter:'blur(20px)',zIndex:40}}>
+        <div><div style={{fontSize:12,color:C.textMuted,fontWeight:500}}>{getGreeting()}</div><div style={{fontSize:20,fontWeight:700}}>Jennifer Chen</div></div>
+        <button onClick={()=>setModal('parentNotify')} style={{width:40,height:40,borderRadius:12,background:C.bgSec,border:'none',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',position:'relative'}}><Icon name="bell" size={18} color={C.textSec}/><div style={{position:'absolute',top:8,right:8,width:8,height:8,borderRadius:8,background:C.red,border:'2px solid white'}}/></button>
       </div>
+      <div style={{padding:'0 20px 100px',paddingTop:8}}>
+
+        {pTab==='home'&&<div className="af">
+          <Card dark style={{marginBottom:16}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:16}}><div><div style={{fontSize:11,fontWeight:600,color:'rgba(255,255,255,0.4)',textTransform:'uppercase',letterSpacing:'0.1em'}}>Slush Fund Balance</div><div style={{fontSize:32,fontWeight:800,color:C.white,marginTop:4}}>${parentTotal.toFixed(2)}</div></div><Badge color={C.orange} bg="rgba(245,158,11,0.15)">2 of 4 paid</Badge></div><ProgressBar value={parentPaid} max={parentTotal} color={C.accent} height={8} bg="rgba(255,255,255,0.1)"/><div style={{display:'flex',justifyContent:'space-between',marginTop:8}}><span style={{fontSize:12,color:'rgba(255,255,255,0.4)'}}>${parentPaid.toFixed(2)} paid</span><span style={{fontSize:12,color:'rgba(255,255,255,0.4)'}}>${(parentTotal-parentPaid).toFixed(2)} remaining</span></div><div style={{marginTop:16,padding:'12px 16px',borderRadius:10,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',display:'flex',justifyContent:'space-between',alignItems:'center'}}><div><div style={{fontSize:12,color:'rgba(255,255,255,0.5)'}}>Next payment due</div><div style={{fontSize:15,fontWeight:700,color:C.white}}>$46.25 · Mar 15</div></div><Btn variant="primary" small onClick={()=>setPTab('fund')}>Pay Now</Btn></div></Card>
+          <div style={{display:'flex',gap:10,marginBottom:20}}>{[{icon:'calendar',label:'Calendar',action:()=>setPTab('calendar')},{icon:'poll',label:'Polls',action:()=>setPTab('polls')},{icon:'dollar',label:'Payments',action:()=>setPTab('fund')},{icon:'messageCircle',label:'Messages',action:()=>setModal('messages')}].map((a,i)=><button key={i} onClick={a.action} style={{flex:1,padding:'16px 0',borderRadius:14,background:C.bgSec,border:'none',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:6}}><Icon name={a.icon} size={20} color={C.textSec}/><span style={{fontSize:11,fontWeight:600,color:C.textSec}}>{a.label}</span></button>)}</div>
+          <div style={{fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:C.textMuted,marginBottom:12}}>Upcoming Events</div>{sortedEvents.slice(0,3).map(ev=><div key={ev.id} style={{display:'flex',alignItems:'center',gap:14,padding:'12px 0',borderBottom:'1px solid '+C.border}}><div style={{width:40,height:40,borderRadius:10,background:eventTypeColor(ev.type)+'15',display:'flex',alignItems:'center',justifyContent:'center'}}><Icon name="calendar" size={16} color={eventTypeColor(ev.type)}/></div><div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{ev.title}</div><div style={{fontSize:12,color:C.textMuted}}>{fmtDate(ev.date)} · {ev.time}</div></div></div>)}
+          <div style={{display:'flex',justifyContent:'center',gap:16,marginTop:24,padding:'8px 0'}}><button style={{background:'none',border:'none',cursor:'pointer',fontSize:12,color:C.textMuted,display:'flex',alignItems:'center',gap:4}}><Icon name="heart" size={13} color={C.textMuted}/> Help a teammate</button><span style={{color:C.border}}>|</span><button style={{background:'none',border:'none',cursor:'pointer',fontSize:12,color:C.textMuted,display:'flex',alignItems:'center',gap:4}}><Icon name="shield" size={13} color={C.textMuted}/> Need assistance?</button></div>
+        </div>}
+
+        {pTab==='calendar'&&<div className="af"><div style={{fontSize:18,fontWeight:700,marginBottom:20}}>Team Calendar</div>{sortedEvents.map(ev=><Card key={ev.id} style={{marginBottom:12,padding:16}} onClick={()=>setModal({type:'eventDetail',event:ev})}><div style={{display:'flex',alignItems:'center',gap:14}}><div style={{width:44,height:44,borderRadius:12,background:eventTypeColor(ev.type)+'15',display:'flex',alignItems:'center',justifyContent:'center'}}><Icon name={ev.type==='game'?'target':'calendar'} size={18} color={eventTypeColor(ev.type)}/></div><div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{ev.title}</div><div style={{fontSize:12,color:C.textMuted}}>{fmtDate(ev.date)} · {ev.time}</div>{ev.location&&<div style={{fontSize:12,color:C.textSec,marginTop:2,display:'flex',alignItems:'center',gap:4}}><Icon name="mapPin" size={11} color={C.textMuted}/>{ev.location}</div>}</div><Badge color={eventTypeColor(ev.type)}>{eventTypeLabel(ev.type)}</Badge></div></Card>)}</div>}
+
+        {pTab==='polls'&&<div className="af"><div style={{fontSize:18,fontWeight:700,marginBottom:4}}>Team Polls</div><div style={{fontSize:13,color:C.textMuted,marginBottom:20}}>Help your manager make the best decisions.</div>{polls.filter(p=>p.active).map(p=>{const totalV=p.options.reduce((s,o)=>s+o.votes,0);return(<Card key={p.id} style={{marginBottom:14,padding:18}}><div style={{fontSize:15,fontWeight:600,marginBottom:14}}>{p.question}</div><div style={{display:'flex',flexDirection:'column',gap:8}}>{p.options.map((opt,i)=><button key={i} onClick={()=>setPolls(polls.map(pp=>pp.id===p.id?{...pp,options:pp.options.map((o,j)=>j===i?{...o,votes:o.votes+1}:o)}:pp))} style={{display:'flex',alignItems:'center',gap:10,padding:'14px 16px',borderRadius:12,border:'1px solid '+C.border,background:C.bg,cursor:'pointer',width:'100%',textAlign:'left'}}><div style={{width:20,height:20,borderRadius:20,border:'2px solid '+C.border,flexShrink:0}}/><span style={{fontSize:14,fontWeight:500}}>{opt.text}</span></button>)}</div><div style={{fontSize:12,color:C.textMuted,marginTop:10}}>{totalV} votes so far</div></Card>)})}{polls.filter(p=>!p.active).map(p=><Card key={p.id} style={{marginBottom:10,padding:16,opacity:0.6}}><div style={{fontSize:14,fontWeight:600}}>{p.question}</div><div style={{fontSize:12,color:C.green,fontWeight:600,marginTop:4}}>✓ Decided: {p.decided}</div></Card>)}</div>}
+
+        {pTab==='fund'&&<div className="af"><div style={{fontSize:18,fontWeight:700,marginBottom:4}}>Payment Plan</div><div style={{fontSize:13,color:C.textMuted,marginBottom:20}}>Tyler (#3) — Team Illinois AAA</div><Card style={{marginBottom:20,padding:20}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:16}}><div><div style={{fontSize:12,color:C.textMuted}}>Total due</div><div style={{fontSize:28,fontWeight:800}}>${parentTotal.toFixed(2)}</div></div><div style={{textAlign:'right'}}><div style={{fontSize:12,color:C.textMuted}}>Paid so far</div><div style={{fontSize:28,fontWeight:800,color:C.green}}>${parentPaid.toFixed(2)}</div></div></div><ProgressBar value={parentPaid} max={parentTotal} color={C.green} height={8}/></Card><div style={{fontSize:14,fontWeight:600,marginBottom:12}}>Choose your payment plan</div><PaymentPlanSelector total={parentTotal-parentPaid} selected={parentPlan} onSelect={setParentPlan}/>{parentPlan>0&&<Btn variant="primary" full style={{marginTop:20}} onClick={()=>alert('Payment processing via Stripe — coming soon!')}><Icon name="creditCard" size={16}/> Continue to Payment</Btn>}</div>}
+
+        {pTab==='profile'&&<div className="af"><div style={{fontSize:18,fontWeight:700,marginBottom:20}}>My Account</div><div style={{display:'flex',alignItems:'center',gap:16,marginBottom:24}}><Avatar name="Jennifer Chen" size={64}/><div><div style={{fontSize:18,fontWeight:700}}>Jennifer Chen</div><div style={{fontSize:13,color:C.textMuted}}>jennifer.chen@email.com</div></div></div>{[{icon:'user',label:'Personal Information'},{icon:'creditCard',label:'Payment Methods'},{icon:'bell',label:'Notification Preferences'},{icon:'shield',label:'Privacy & Security'},{icon:'messageCircle',label:'Help & Support'}].map((item,i)=><button key={i} style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 0',background:'none',border:'none',borderBottom:'1px solid '+C.border,cursor:'pointer'}}><div style={{display:'flex',alignItems:'center',gap:14}}><div style={{width:40,height:40,borderRadius:12,background:C.bgSec,display:'flex',alignItems:'center',justifyContent:'center'}}><Icon name={item.icon} size={18} color={C.textSec}/></div><span style={{fontSize:15,fontWeight:500,color:C.text}}>{item.label}</span></div><Icon name="chevRight" size={16} color={C.textMuted}/></button>)}<button onClick={()=>setRole(null)} style={{width:'100%',padding:16,marginTop:24,borderRadius:12,background:C.bgSec,border:'none',color:C.textSec,fontSize:14,fontWeight:500,cursor:'pointer'}}>Sign Out</button></div>}
+      </div>
+      <BottomNav tabs={parentTabs} active={pTab} onTab={setPTab}/>
+
+      {modal==='parentNotify'&&<Modal title="Notifications" subtitle="2 new updates" onClose={()=>setModal(null)}>{[{icon:'dollar',text:'Payment reminder: $46.25 due Mar 15',sub:'Frostbite Classic Tournament Fee',time:'1h ago',color:C.orange},{icon:'calendar',text:'Practice time updated for Tuesday',sub:'Now 6:30 PM at Skate Zone',time:'4h ago',color:C.blue},{icon:'poll',text:'New poll: Team dinner preference',sub:'Vote now to help Coach decide',time:'1d ago',color:C.purple}].map((n,i)=><div key={i} style={{display:'flex',gap:12,padding:'14px 0',borderBottom:'1px solid '+C.border}}><div style={{width:40,height:40,borderRadius:12,background:n.color+'15',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon name={n.icon} size={18} color={n.color}/></div><div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{n.text}</div><div style={{fontSize:12,color:C.textMuted,marginTop:2}}>{n.sub}</div></div><span style={{fontSize:11,color:C.textMuted,flexShrink:0}}>{n.time}</span></div>)}</Modal>}
+
+      <MessagesModal/><EventDetailModal/>
     </div>
   );
-
-  // ═══ MANAGER SETUP ═══
-  if(screen==="managerSetup") {
-    const steps = ["Team","Roster","Fund","Review"];
-    return (
-      <div style={{minHeight:"100vh",background:C.bg,padding:24}}>
-        <button onClick={()=>step>0?setStep(step-1):nav("authChoice")} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:6,color:C.textMuted,marginBottom:28,fontSize:14,fontWeight:600}}><Icon name="back" size={18} color={C.textMuted}/> Back</button>
-        <div style={{maxWidth:480,margin:"0 auto"}}>
-          <div style={{display:"flex",alignItems:"center",marginBottom:36}}>
-            {steps.map((s,i)=>(
-              <div key={i} style={{flex:1,display:"flex",alignItems:"center"}}>
-                <div style={{width:32,height:32,borderRadius:8,background:i<=step?C.navy:C.bg,color:i<=step?C.white:C.textMuted,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,flexShrink:0,border:i<=step?"none":`1.5px solid ${C.border}`}}>{i<step?"✓":i+1}</div>
-                {i<steps.length-1&&<div style={{flex:1,height:2,background:i<step?C.navy:C.border,margin:"0 6px",borderRadius:1}}/>}
-              </div>
-            ))}
-          </div>
-
-          {step===0&&(
-            <div className="fade-in">
-              <h2 style={{...T.h2,margin:"0 0 6px"}}>Create Your Team</h2>
-              <p style={{...T.body,margin:"0 0 28px"}}>Start by entering your team and contact details.</p>
-              <Input label="Team Name" value={teamName} onChange={setTeamName} placeholder="e.g. Eastside Thunder 14U" />
-              <Input label="Your Full Name" value={mgrName} onChange={setMgrName} placeholder="Coach Mike Johnson" />
-              <Input label="Your Email" value={mgrEmail} onChange={setMgrEmail} type="email" placeholder="mike@thunderhockey.com" />
-              <Input label="Your Phone" value={mgrPhone} onChange={setMgrPhone} type="tel" placeholder="(555) 012-3456" />
-              <Btn full onClick={()=>setStep(1)} disabled={!teamName||!mgrName||!mgrEmail}>Continue</Btn>
-            </div>
-          )}
-
-          {step===1&&(
-            <div className="fade-in">
-              <h2 style={{...T.h2,margin:"0 0 6px"}}>Add Your Roster</h2>
-              <p style={{...T.body,margin:"0 0 24px"}}>{roster.length} player{roster.length!==1?"s":""} added. Add each player with parent contact info.</p>
-
-              {roster.map(r=>(
-                <Card key={r.id} style={{padding:"12px 16px",marginBottom:6}}>
-                  <div style={{display:"flex",alignItems:"center",gap:12}}>
-                    <Avatar name={r.player} size={36}/>
-                    <div style={{flex:1}}>
-                      <div style={{fontWeight:700,fontSize:14,color:C.text}}>{r.player}</div>
-                      <div style={{fontSize:12,color:C.textMuted,fontWeight:500}}>{r.parent1} · {r.parent1Email}</div>
-                    </div>
-                    <div style={{width:24,height:24,borderRadius:6,background:C.greenBg,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="check" size={14} color={C.green}/></div>
-                  </div>
-                </Card>
-              ))}
-
-              <Card style={{padding:16,marginBottom:16,cursor:"pointer",border:`1.5px dashed ${C.border}`,background:C.offWhite,textAlign:"center"}} onClick={()=>setAddPlayerModal(true)}>
-                <Icon name="plus" size={20} color={C.steel}/>
-                <div style={{fontWeight:700,fontSize:14,color:C.steel,marginTop:6}}>Add Player & Parents</div>
-              </Card>
-
-              <Btn full onClick={()=>setStep(2)} disabled={roster.length===0}>Continue with {roster.length} Player{roster.length!==1?"s":""}</Btn>
-
-              <Modal open={addPlayerModal} onClose={()=>setAddPlayerModal(false)}>
-                <h3 style={{...T.h3,margin:"0 0 20px"}}>Add Player</h3>
-                <Input label="Player Name" value={rPlayer} onChange={setRPlayer} placeholder="First Last" />
-                <div style={{...T.label,fontSize:10,marginBottom:12,marginTop:8,color:C.accent}}>Parent / Guardian 1</div>
-                <Input label="Name" value={rP1Name} onChange={setRP1Name} placeholder="First Last" />
-                <Input label="Email" value={rP1Email} onChange={setRP1Email} type="email" placeholder="parent@email.com" />
-                <Input label="Phone" value={rP1Phone} onChange={setRP1Phone} type="tel" placeholder="(555) 000-0000" />
-                <div style={{...T.label,fontSize:10,marginBottom:12,marginTop:8,color:C.steel}}>Parent / Guardian 2 (Optional)</div>
-                <Input label="Name" value={rP2Name} onChange={setRP2Name} placeholder="First Last" />
-                <Input label="Email" value={rP2Email} onChange={setRP2Email} type="email" placeholder="parent2@email.com" />
-                <Btn full onClick={addToRoster} disabled={!rPlayer||!rP1Name||!rP1Email} style={{marginTop:8}}><Icon name="plus" size={15} color={C.white}/> Add to Roster</Btn>
-              </Modal>
-            </div>
-          )}
-
-          {step===2&&(
-            <div className="fade-in">
-              <h2 style={{...T.h2,margin:"0 0 6px"}}>Set Slush Fund</h2>
-              <p style={{...T.body,margin:"0 0 24px"}}>How much does each family contribute?</p>
-              <Input label="Amount Per Family" value={fundAmt} onChange={setFundAmt} type="number" icon={<Icon name="dollar" size={18} color={C.textMuted}/>} />
-              <Card style={{background:C.offWhite,marginBottom:16,border:`1px solid ${C.border}`}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
-                  <span style={{...T.caption}}>Families</span><span style={{fontWeight:800,color:C.text,fontSize:15}}>{roster.length}</span>
-                </div>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
-                  <span style={{...T.caption}}>Per Family</span><span style={{fontWeight:800,color:C.text,fontSize:15}}>{fmt(perFamily)}</span>
-                </div>
-                <div style={{borderTop:`1.5px solid ${C.border}`,paddingTop:12,display:"flex",justifyContent:"space-between"}}>
-                  <span style={{fontWeight:800,fontSize:15}}>Total Slush Fund</span>
-                  <span style={{fontWeight:900,color:C.accent,fontSize:20}}>{fmt(perFamily*roster.length)}</span>
-                </div>
-              </Card>
-              <Card style={{background:C.orangeBg,padding:16,border:`1px solid ${C.orange}25`,marginBottom:16}}>
-                <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
-                  <Icon name="shield" size={18} color={C.orange}/>
-                  <div style={{fontSize:13,color:C.textSec,lineHeight:1.5,fontWeight:500}}>
-                    <strong style={{color:C.text,fontWeight:800}}>Manager's Discretion (5%)</strong><br/>
-                    {fmt(perFamily*roster.length*0.05)} for team bonding, meals, or other discretionary needs.
-                  </div>
-                </div>
-              </Card>
-              <Btn full onClick={()=>setStep(3)} disabled={!fundAmt||parseInt(fundAmt)<=0}>Continue</Btn>
-            </div>
-          )}
-
-          {step===3&&(
-            <div className="fade-in">
-              <h2 style={{...T.h2,margin:"0 0 6px"}}>Review & Launch</h2>
-              <p style={{...T.body,margin:"0 0 24px"}}>Confirm setup. Invites will be sent to all parents via email.</p>
-              <VirtualCard balance={perFamily*roster.length} spent={0} name={mgrName||"Team Manager"} cardNum="4832  7291  0045  3318" show={showCard} onToggle={()=>setShowCard(!showCard)} />
-              <div style={{marginTop:16}}>
-                <Card style={{marginBottom:10}}>
-                  <div style={{...T.caption,marginBottom:4}}>Team</div>
-                  <div style={{fontWeight:800,color:C.text,fontSize:16}}>{teamName}</div>
-                </Card>
-                <Card style={{marginBottom:10}}>
-                  <div style={{display:"flex",justifyContent:"space-between"}}>
-                    <div><div style={{...T.caption,marginBottom:4}}>Families</div><div style={{fontWeight:800,fontSize:16}}>{roster.length}</div></div>
-                    <div style={{textAlign:"right"}}><div style={{...T.caption,marginBottom:4}}>Per Family</div><div style={{fontWeight:800,fontSize:16}}>{fmt(perFamily)}</div></div>
-                    <div style={{textAlign:"right"}}><div style={{...T.caption,marginBottom:4}}>Total</div><div style={{fontWeight:900,color:C.accent,fontSize:18}}>{fmt(perFamily*roster.length)}</div></div>
-                  </div>
-                </Card>
-                <Card style={{marginBottom:10,background:C.offWhite}}>
-                  <div style={{...T.caption,marginBottom:8}}>Invites will be sent to</div>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                    {roster.map(r=>(
-                      <span key={r.id} style={{background:C.white,border:`1px solid ${C.border}`,borderRadius:6,padding:"4px 10px",fontSize:12,fontWeight:600,color:C.textSec}}>{r.parent1Email}</span>
-                    ))}
-                  </div>
-                </Card>
-              </div>
-              <Btn variant="accent" full onClick={sendInvites} disabled={sendingEmails} style={{marginTop:16}}>
-                {sendingEmails ? <><span className="pulse">Sending Invites...</span></> : emailsSent ? <><Icon name="check" size={16} color={C.navy}/> Sent!</> : <><Icon name="send" size={16} color={C.navy}/> Send Invites & Go Live</>}
-              </Btn>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // ═══ MANAGER DASHBOARD ═══
-  if(screen==="managerDash") return (
-    <div style={{minHeight:"100vh",background:C.bg}}>
-      <div style={{background:"linear-gradient(160deg,#0A0A14 0%,#1A1A2E 40%,#0D0D1A 100%)",padding:"20px 24px 84px"}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-          <div>
-            <div style={{color:"rgba(255,255,255,0.35)",fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase"}}>{teamName||"Your Team"}</div>
-            <div style={{color:C.white,fontSize:22,fontWeight:900,letterSpacing:"-0.02em",marginTop:4}}>{mgrName||"Coach"}</div>
-          </div>
-          <div style={{display:"flex",gap:8}}>
-            <div style={{width:40,height:40,borderRadius:10,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}><Icon name="bell" size={18} color="rgba(255,255,255,0.5)"/></div>
-            <div style={{width:40,height:40,borderRadius:10,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}} onClick={()=>nav("landing")}><Icon name="settings" size={18} color="rgba(255,255,255,0.5)"/></div>
-          </div>
-        </div>
-      </div>
-
-      <div style={{padding:"0 20px",marginTop:-68}}>
-        <VirtualCard balance={totalFund} spent={totalSpent} name={mgrName||"Team Manager"} cardNum="4832  7291  0045  3318" show={showCard} onToggle={()=>setShowCard(!showCard)} />
-
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginTop:14}}>
-          {[[fmt(totalFund),"Total Fund",C.text],[fmt(totalSpent),"Spent",C.green],[fmt(totalFund-totalSpent),"Remaining",C.accent]].map(([v,l,c],i)=>(
-            <Card key={i} style={{padding:"14px 12px",textAlign:"center"}}>
-              <div style={{fontSize:17,fontWeight:900,color:c,letterSpacing:"-0.02em"}}>{v}</div>
-              <div style={{fontSize:11,color:C.textMuted,marginTop:3,fontWeight:600}}>{l}</div>
-            </Card>
-          ))}
-        </div>
-
-        <div style={{marginTop:20}}>
-          <TabBar tabs={[{id:"dashboard",label:"Overview"},{id:"families",label:"Families"},{id:"activity",label:"Activity"}]} active={mTab} onSelect={setMTab} />
-        </div>
-
-        {mTab==="dashboard"&&(
-          <div>
-            <Card style={{marginBottom:12}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                <div style={{fontWeight:800,fontSize:15}}>Collection Progress</div>
-                <Badge label="72%"/>
-              </div>
-              <Progress value={72} max={100} height={8}/>
-              <div style={{display:"flex",justifyContent:"space-between",marginTop:10,fontSize:12,color:C.textMuted,fontWeight:600}}>
-                <span>{fmt(totalFund*0.72)}</span><span>{fmt(totalFund)}</span>
-              </div>
-            </Card>
-            <Card style={{marginBottom:12}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                <div style={{fontWeight:800,fontSize:15}}>Manager's Discretion</div>
-                <span style={{fontSize:13,color:C.textMuted,fontWeight:700}}>{fmt(discretionaryUsed)} / {fmt(discretionaryMax)}</span>
-              </div>
-              <Progress value={discretionaryUsed} max={discretionaryMax} color={C.orange} height={5}/>
-            </Card>
-            {/* Hardship pool — subtle indicator, not a card */}
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 4px",marginBottom:8}}>
-              <div style={{display:"flex",alignItems:"center",gap:6,fontSize:12,color:C.textMuted,fontWeight:600}}>
-                <Icon name="heart" size={13} color={C.textMuted}/> Hardship Pool: {fmt(350)}
-              </div>
-              <span style={{fontSize:11,color:C.textMuted,fontWeight:500}}>5 contributors</span>
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
-              <Btn variant="outline" full small onClick={()=>setAddFeeModal(true)}><Icon name="plus" size={14} color={C.text}/> Add Fee</Btn>
-              <Btn variant="outline" full small onClick={()=>setEndSeasonModal(true)}><Icon name="refresh" size={14} color={C.text}/> End Season</Btn>
-            </div>
-          </div>
-        )}
-
-        {mTab==="families"&&(
-          <div>
-            {familyStatuses.map(f=>(
-              <Card key={f.id} style={{marginBottom:8,padding:"14px 16px"}}>
-                <div style={{display:"flex",alignItems:"center",gap:12}}>
-                  <div style={{position:"relative"}}>
-                    <Avatar name={f.parent1} size={40}/>
-                    <div style={{position:"absolute",bottom:-1,right:-1,width:12,height:12,borderRadius:4,background:f.onTrack?C.green:C.red,border:`2px solid ${C.white}`}}/>
-                  </div>
-                  <div style={{flex:1}}>
-                    <div style={{fontWeight:700,fontSize:14}}>{f.player}</div>
-                    <div style={{fontSize:12,color:C.textMuted,fontWeight:500}}>{f.parent1} · {f.plan===1?"Paid in Full":`${f.plan}-pay plan`}</div>
-                  </div>
-                  <div style={{textAlign:"right"}}>
-                    <div style={{fontWeight:800,fontSize:14,color:f.paidPct===100?C.green:C.text}}>{f.paidPct}%</div>
-                    <div style={{fontSize:11,color:C.textMuted,fontWeight:600}}>{fmt(perFamily*f.paidPct/100)}</div>
-                  </div>
-                </div>
-                <div style={{marginTop:10}}><Progress value={f.paidPct} max={100} color={f.onTrack?C.green:C.red} height={4}/></div>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {mTab==="calendar"&&(
-          <div>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-              <div style={{fontWeight:800,fontSize:17}}>Team Calendar</div>
-              <Btn variant="accent" small onClick={openNewEvent}><Icon name="plus" size={14} color={C.navy}/> New Event</Btn>
-            </div>
-            {sortedEvents.length===0&&<Card style={{textAlign:"center",padding:32,color:C.textMuted}}><Icon name="calendar" size={32} color={C.border}/><div style={{marginTop:12,fontWeight:600}}>No events yet</div></Card>}
-            {sortedEvents.map(ev=>(
-              <Card key={ev.id} style={{marginBottom:8,padding:"14px 16px",cursor:"pointer",borderLeft:`4px solid ${eventTypeColor(ev.type)}`}} onClick={()=>openEditEvent(ev)}>
-                <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
-                  <div style={{width:44,minHeight:44,borderRadius:10,background:`${eventTypeColor(ev.type)}15`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",flexShrink:0,padding:"4px 0"}}>
-                    <div style={{fontSize:10,fontWeight:700,color:eventTypeColor(ev.type),textTransform:"uppercase"}}>{fmtEventDate(ev.date).split(" ")[0]}</div>
-                    <div style={{fontSize:18,fontWeight:900,color:eventTypeColor(ev.type),lineHeight:1}}>{ev.date.split("-")[2]}</div>
-                  </div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
-                      <div style={{fontWeight:700,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.title}</div>
-                      <Badge label={eventTypeLabel(ev.type)} color={eventTypeColor(ev.type)} bg={`${eventTypeColor(ev.type)}15`}/>
-                    </div>
-                    <div style={{fontSize:12,color:C.textMuted,fontWeight:500,display:"flex",alignItems:"center",gap:6}}>
-                      {ev.time&&<><Icon name="clock" size={11} color={C.textMuted}/> {ev.time}</>}
-                      {ev.location&&<><span style={{color:C.border}}>·</span><Icon name="mapPin" size={11} color={C.textMuted}/> {ev.location}</>}
-                    </div>
-                    {ev.notes&&<div style={{fontSize:12,color:C.textSec,marginTop:4,fontWeight:500}}>{ev.notes}</div>}
-                  </div>
-                  <div style={{display:"flex",gap:4,flexShrink:0}}>
-                    <div onClick={e=>{e.stopPropagation();deleteEvent(ev.id)}} style={{width:28,height:28,borderRadius:6,background:C.redBg,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}><Icon name="x" size={13} color={C.red}/></div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-
-            <Modal open={calModal} onClose={()=>setCalModal(false)}>
-              <h3 style={{...T.h3,margin:"0 0 20px"}}>{editEvent?"Edit Event":"New Event"}</h3>
-              <Input label="Title" value={evTitle} onChange={setEvTitle} placeholder="e.g. Practice — Breakout Passing"/>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                <Input label="Date" value={evDate} onChange={setEvDate} type="date"/>
-                <Input label="Time" value={evTime} onChange={setEvTime} placeholder="6:30 PM"/>
-              </div>
-              <Input label="Location" value={evLocation} onChange={setEvLocation} placeholder="Twin Ponds East" icon={<Icon name="mapPin" size={16} color={C.textMuted}/>}/>
-              <div style={{marginBottom:18}}>
-                <label style={{...T.label,display:"block",marginBottom:8,fontSize:11}}>Type</label>
-                <div style={{display:"flex",gap:6}}>
-                  {["practice","game","tournament","event"].map(t=>(
-                    <button key={t} onClick={()=>setEvType(t)} style={{flex:1,padding:"10px 0",border:`1.5px solid ${evType===t?eventTypeColor(t):C.border}`,borderRadius:8,background:evType===t?`${eventTypeColor(t)}15`:"transparent",color:evType===t?eventTypeColor(t):C.textSec,fontWeight:700,fontSize:12,cursor:"pointer",textTransform:"capitalize"}}>{t}</button>
-                  ))}
-                </div>
-              </div>
-              <Input label="Notes (optional)" value={evNotes} onChange={setEvNotes} placeholder="Arrive early, bring gear..." multiline/>
-              <Btn full onClick={saveEvent} disabled={!evTitle||!evDate}><Icon name="check" size={15} color={C.white}/> {editEvent?"Save Changes":"Create Event"}</Btn>
-            </Modal>
-          </div>
-        )}
-
-        {mTab==="polls"&&(
-          <div>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-              <div style={{fontWeight:800,fontSize:17}}>Team Polls</div>
-              <Btn variant="accent" small onClick={()=>setPollModal(true)}><Icon name="plus" size={14} color={C.navy}/> New Poll</Btn>
-            </div>
-            {polls.length===0&&<Card style={{textAlign:"center",padding:32,color:C.textMuted}}><Icon name="poll" size={32} color={C.border}/><div style={{marginTop:12,fontWeight:600}}>No polls yet</div></Card>}
-            {polls.map(p=>{
-              const totalV = p.options.reduce((s,o)=>s+o.votes,0);
-              return (
-                <Card key={p.id} style={{marginBottom:10,padding:18}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
-                    <div style={{fontWeight:800,fontSize:15,flex:1}}>{p.question}</div>
-                    <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
-                      {p.active?<Badge label="Active" color={C.green} bg={C.greenBg}/>:<Badge label="Closed" color={C.textMuted} bg={C.bg}/>}
-                      {p.active&&<div onClick={()=>closePoll(p.id)} style={{width:28,height:28,borderRadius:6,background:C.bg,border:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}} title="Close poll"><Icon name="x" size={13} color={C.textMuted}/></div>}
-                    </div>
-                  </div>
-                  {p.options.map((o,oi)=>{
-                    const pct = totalV>0?Math.round(o.votes/totalV*100):0;
-                    return (
-                      <div key={oi} style={{marginBottom:8}}>
-                        <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                          <span style={{fontSize:13,fontWeight:600,color:C.text}}>{o.text}</span>
-                          <span style={{fontSize:12,fontWeight:700,color:C.textMuted}}>{o.votes} ({pct}%)</span>
-                        </div>
-                        <div style={{background:C.bg,borderRadius:4,height:8,overflow:"hidden"}}>
-                          <div style={{width:`${pct}%`,height:"100%",background:C.gradientAccent,borderRadius:4,transition:"width 0.3s"}}/>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  <div style={{fontSize:11,color:C.textMuted,marginTop:8,fontWeight:600}}>{totalV} vote{totalV!==1?"s":""} · Created {p.createdAt}</div>
-                </Card>
-              );
-            })}
-
-            <Modal open={pollModal} onClose={()=>setPollModal(false)}>
-              <h3 style={{...T.h3,margin:"0 0 20px"}}>Create Poll</h3>
-              <Input label="Question" value={pollQuestion} onChange={setPollQuestion} placeholder="e.g. Preferred restaurant for team dinner?"/>
-              <div style={{marginBottom:18}}>
-                <label style={{...T.label,display:"block",marginBottom:8,fontSize:11}}>Options</label>
-                {pollOptions.map((o,i)=>(
-                  <div key={i} style={{display:"flex",gap:8,marginBottom:8}}>
-                    <div style={{flex:1}}>
-                      <input value={o} onChange={e=>{const n=[...pollOptions];n[i]=e.target.value;setPollOptions(n);}} placeholder={`Option ${i+1}`} style={{width:"100%",padding:"12px 14px",border:`1.5px solid ${C.border}`,borderRadius:10,fontSize:14,fontWeight:500,color:C.text,background:C.white,outline:"none",boxSizing:"border-box"}}/>
-                    </div>
-                    {pollOptions.length>2&&<div onClick={()=>setPollOptions(prev=>prev.filter((_,j)=>j!==i))} style={{width:40,height:40,borderRadius:8,background:C.redBg,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}><Icon name="x" size={14} color={C.red}/></div>}
-                  </div>
-                ))}
-                {pollOptions.length<6&&<button onClick={()=>setPollOptions(prev=>[...prev,""])} style={{background:"none",border:`1.5px dashed ${C.border}`,borderRadius:8,padding:"10px 0",width:"100%",cursor:"pointer",fontSize:13,fontWeight:700,color:C.steel}}>+ Add Option</button>}
-              </div>
-              <Btn full onClick={createPoll} disabled={!pollQuestion||pollOptions.filter(o=>o.trim()).length<2}><Icon name="send" size={15} color={C.white}/> Push to Team</Btn>
-            </Modal>
-          </div>
-        )}
-
-        {mTab==="settings"&&(
-          <div>
-            <Card style={{marginBottom:14,padding:24,textAlign:"center"}}>
-              <div style={{position:"relative",display:"inline-block"}}>
-                <Avatar name={mgrName||"Coach"} size={72} src={mgrPhoto}/>
-                <input type="file" accept="image/*" ref={photoInputRef} style={{display:"none"}} onChange={e=>handlePhotoUpload(e,setMgrPhoto)}/>
-                <div onClick={()=>photoInputRef.current?.click()} style={{position:"absolute",bottom:-4,right:-4,width:28,height:28,borderRadius:8,background:C.navy,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",border:`2px solid ${C.white}`}}>
-                  <Icon name="camera" size={14} color={C.white}/>
-                </div>
-              </div>
-              <div style={{fontWeight:800,fontSize:18,marginTop:12}}>{mgrName||"Coach"}</div>
-              <div style={{color:C.textMuted,fontSize:13,fontWeight:500}}>{teamName||"Your Team"} · Manager</div>
-            </Card>
-            <Card style={{padding:18,marginBottom:14}}>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:14}}>Contact Info</div>
-              <div style={{display:"flex",justifyContent:"space-between",padding:"10px 0",borderBottom:`1px solid ${C.borderLight}`}}>
-                <span style={{fontSize:13,color:C.textMuted,fontWeight:600}}>Email</span>
-                <span style={{fontSize:13,fontWeight:700}}>{mgrEmail||"—"}</span>
-              </div>
-              <div style={{display:"flex",justifyContent:"space-between",padding:"10px 0"}}>
-                <span style={{fontSize:13,color:C.textMuted,fontWeight:600}}>Phone</span>
-                <span style={{fontSize:13,fontWeight:700}}>{mgrPhone||"—"}</span>
-              </div>
-            </Card>
-            <Card style={{padding:18,marginBottom:14}}>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:14}}>Alert Preferences</div>
-              {[{label:"Email Notifications",key:"email"},{label:"SMS Notifications",key:"sms"},{label:"Push Alerts",key:"push"}].map((s,i)=>(
-                <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:i<2?`1px solid ${C.borderLight}`:"none"}}>
-                  <span style={{fontSize:14,fontWeight:600}}>{s.label}</span>
-                  <div onClick={()=>setAlertPrefs(p=>({...p,[s.key]:!p[s.key]}))} style={{width:44,height:24,borderRadius:12,background:alertPrefs[s.key]?C.navy:C.border,padding:2,cursor:"pointer",transition:"background 0.15s"}}>
-                    <div style={{width:20,height:20,borderRadius:10,background:C.white,boxShadow:C.shadow1,transform:alertPrefs[s.key]?"translateX(20px)":"translateX(0)",transition:"all 0.15s"}}/>
-                  </div>
-                </div>
-              ))}
-            </Card>
-            <Card style={{padding:18,marginBottom:14}}>
-              <div style={{fontWeight:800,fontSize:14,marginBottom:14}}>Team Settings</div>
-              <div style={{display:"flex",justifyContent:"space-between",padding:"10px 0",borderBottom:`1px solid ${C.borderLight}`}}>
-                <span style={{fontSize:13,color:C.textMuted,fontWeight:600}}>Team ID</span>
-                <span style={{...T.mono,fontSize:12,color:C.textSec}}>{Store.currentTeam?.id||"pf-"+Date.now().toString(36).slice(0,6)}</span>
-              </div>
-              <div style={{display:"flex",justifyContent:"space-between",padding:"10px 0",borderBottom:`1px solid ${C.borderLight}`}}>
-                <span style={{fontSize:13,color:C.textMuted,fontWeight:600}}>Roster Size</span>
-                <span style={{fontSize:13,fontWeight:700}}>{roster.length||8} families</span>
-              </div>
-              <div style={{display:"flex",justifyContent:"space-between",padding:"10px 0"}}>
-                <span style={{fontSize:13,color:C.textMuted,fontWeight:600}}>Season Status</span>
-                <Badge label="Active" color={C.green} bg={C.greenBg}/>
-              </div>
-            </Card>
-            <Btn variant="danger" full small onClick={()=>nav("landing")} style={{marginTop:8}}><Icon name="x" size={14} color={C.red}/> Sign Out</Btn>
-          </div>
-        )}
-
-        {mTab==="activity"&&(
-          <div>
-            {DEMO_TXNS.map(t=>(
-              <Card key={t.id} style={{marginBottom:8,padding:"14px 16px"}}>
-                <div style={{display:"flex",alignItems:"center",gap:12}}>
-                  <CatIcon cat={t.category}/>
-                  <div style={{flex:1}}>
-                    <div style={{fontWeight:700,fontSize:14}}>{t.desc}</div>
-                    <div style={{display:"flex",gap:8,alignItems:"center",marginTop:4}}>
-                      <span style={{fontSize:12,color:C.textMuted,fontWeight:500}}>{t.date}</span>
-                      <Badge label={t.category} bg={t.category==="Discretionary"?C.orangeBg:C.bg} color={t.category==="Discretionary"?C.orange:C.steel}/>
-                    </div>
-                  </div>
-                  <div style={{fontWeight:800,fontSize:15,letterSpacing:"-0.01em"}}>-{fmt(t.amount)}</div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <Modal open={addFeeModal} onClose={()=>setAddFeeModal(false)}>
-        <h3 style={{...T.h3,margin:"0 0 20px"}}>Request Additional Fee</h3>
-        <Input label="Description" value={addFeeDesc} onChange={setAddFeeDesc} placeholder="e.g. Spring Tournament Entry"/>
-        <Input label="Amount Per Family" value={addFeeAmt} onChange={setAddFeeAmt} type="number" placeholder="0.00" icon={<Icon name="dollar" size={18} color={C.textMuted}/>}/>
-        <Btn full onClick={()=>{setAddFeeModal(false);setAddFeeAmt("");setAddFeeDesc("")}}><Icon name="send" size={15} color={C.white}/> Send to All Families</Btn>
-      </Modal>
-
-      <Modal open={endSeasonModal} onClose={()=>setEndSeasonModal(false)}>
-        <h3 style={{...T.h3,margin:"0 0 8px"}}>End of Season Reconciliation</h3>
-        <p style={{...T.body,fontSize:14,marginBottom:20}}>Remaining funds refunded proportional to each family's payment percentage.</p>
-        <Card style={{background:C.greenBg,border:`1px solid ${C.green}20`,marginBottom:16}}>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
-            <span style={{...T.caption}}>Unspent Balance</span><span style={{fontWeight:800,color:C.green}}>{fmt(totalFund-totalSpent)}</span>
-          </div>
-          <div style={{display:"flex",justifyContent:"space-between"}}>
-            <span style={{...T.caption}}>Families Eligible</span><span style={{fontWeight:800}}>{familyStatuses.length}</span>
-          </div>
-        </Card>
-        <p style={{fontSize:12,color:C.textMuted,marginBottom:20,fontWeight:500,lineHeight:1.5}}>A family that has paid 88% receives 88% of their proportional refund.</p>
-        <div style={{display:"flex",gap:10}}>
-          <Btn variant="outline" full onClick={()=>setEndSeasonModal(false)}>Cancel</Btn>
-          <Btn variant="accent" full onClick={()=>setEndSeasonModal(false)}><Icon name="refresh" size={15} color={C.navy}/> Process Refunds</Btn>
-        </div>
-      </Modal>
-
-      <div style={{position:"fixed",bottom:0,left:0,right:0,background:C.white,borderTop:`1px solid ${C.border}`,display:"flex",padding:"8px 0 20px",justifyContent:"space-around",zIndex:50}}>
-        {[{icon:"home",label:"Home",tab:"dashboard"},{icon:"calendar",label:"Calendar",tab:"calendar"},{icon:"poll",label:"Polls",tab:"polls"},{icon:"users",label:"Families",tab:"families"},{icon:"settings",label:"More",tab:"settings"}].map(n=>(
-          <button key={n.tab} onClick={()=>setMTab(n.tab)} style={{background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"4px 8px"}}>
-            <Icon name={n.icon} size={20} color={mTab===n.tab?C.navy:C.textMuted}/>
-            <span style={{fontSize:9,fontWeight:700,color:mTab===n.tab?C.navy:C.textMuted}}>{n.label}</span>
-          </button>
-        ))}
-      </div>
-      <div style={{height:80}}/>
-    </div>
-  );
-
-  // ═══ PARENT ONBOARDING ═══
-  if(screen==="parentOnboard") return (
-    <div style={{minHeight:"100vh",background:C.bg,padding:24}}>
-      <button onClick={()=>nav("authChoice")} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:6,color:C.textMuted,marginBottom:28,fontSize:14,fontWeight:600}}><Icon name="back" size={18} color={C.textMuted}/> Back</button>
-      <div className="fade-in" style={{maxWidth:440,margin:"0 auto"}}>
-        <div style={{textAlign:"center",marginBottom:28}}>
-          <div style={{width:52,height:52,borderRadius:12,background:C.gradientBtn,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px"}}><span style={{fontSize:22}}>🏒</span></div>
-          <h2 style={{...T.h2,margin:"0 0 6px"}}>You've Been Invited</h2>
-          <p style={{color:C.textMuted,fontSize:14,fontWeight:600}}>{teamName||"Eastside Thunder 14U"} · {mgrName||"Coach Mike Johnson"}</p>
-        </div>
-
-        <Card style={{marginBottom:20,padding:24}}>
-          <div style={{textAlign:"center",marginBottom:24}}>
-            <div style={{...T.label,fontSize:10,marginBottom:6}}>Slush Fund Contribution</div>
-            <div style={{fontSize:40,fontWeight:900,letterSpacing:"-0.03em"}}>{fmt(perFamily||1000)}</div>
-          </div>
-          <div style={{...T.label,fontSize:10,marginBottom:12}}>Choose Payment Plan</div>
-          {PLANS.map((p,i)=>(
-            <div key={i} onClick={()=>setSelectedPlan(i)} style={{display:"flex",alignItems:"center",padding:"14px 16px",borderRadius:10,border:`1.5px solid ${selectedPlan===i?C.navy:C.border}`,background:selectedPlan===i?C.offWhite:C.white,marginBottom:6,cursor:"pointer",transition:"all 0.15s"}}>
-              <div style={{width:20,height:20,borderRadius:6,border:`2px solid ${selectedPlan===i?C.navy:C.border}`,marginRight:14,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,background:selectedPlan===i?C.navy:"transparent"}}>
-                {selectedPlan===i&&<Icon name="check" size={12} color={C.white}/>}
-              </div>
-              <div style={{flex:1}}>
-                <div style={{fontWeight:700,fontSize:14}}>{p.label}</div>
-                <div style={{fontSize:12,color:C.textMuted,fontWeight:500}}>{p.desc}</div>
-              </div>
-              <div style={{textAlign:"right"}}>
-                <div style={{fontWeight:800,fontSize:16,letterSpacing:"-0.01em"}}>
-                  {p.installments===1?fmt(parentOwed||1000):fmt(Math.round((parentOwed||1000)/p.installments)+p.feePerInstallment)}
-                </div>
-                {p.installments>1&&<div style={{fontSize:11,color:C.textMuted,fontWeight:600}}>× {p.installments}</div>}
-              </div>
-            </div>
-          ))}
-          {selectedPlan!==null&&selectedPlan>0&&(
-            <div style={{background:C.offWhite,borderRadius:8,padding:14,marginTop:10,fontSize:13,border:`1px solid ${C.border}`}}>
-              <div style={{display:"flex",justifyContent:"space-between",color:C.textSec,fontWeight:600}}>
-                <span>Subtotal</span><span>{fmt(parentOwed||1000)}</span>
-              </div>
-              <div style={{display:"flex",justifyContent:"space-between",color:C.textSec,marginTop:6,fontWeight:600}}>
-                <span>Convenience fee</span><span>{fmt(PLANS[selectedPlan].feePerInstallment)} × {PLANS[selectedPlan].installments} = {fmt(PLANS[selectedPlan].feePerInstallment*PLANS[selectedPlan].installments)}</span>
-              </div>
-              <div style={{display:"flex",justifyContent:"space-between",fontWeight:900,marginTop:10,paddingTop:10,borderTop:`1.5px solid ${C.border}`,fontSize:15}}>
-                <span>Total</span><span>{fmt((parentOwed||1000)+PLANS[selectedPlan].feePerInstallment*PLANS[selectedPlan].installments)}</span>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        {/* Payment Method */}
-        {selectedPlan!==null&&(
-          <Card style={{marginBottom:20,padding:20}}>
-            <div style={{...T.label,fontSize:10,marginBottom:14}}>Payment Method</div>
-            <div style={{display:"flex",gap:8}}>
-              {[["card","Credit Card",<Icon name="creditCard" size={18} color={payMethod==="card"?C.white:C.steel}/>],
-                ["debit","Debit Card",<Icon name="card" size={18} color={payMethod==="debit"?C.white:C.steel}/>],
-                ["ach","Bank ACH",<Icon name="bank" size={18} color={payMethod==="ach"?C.white:C.steel}/>]
-              ].map(([id,label,icon])=>(
-                <div key={id} onClick={()=>setPayMethod(id)} style={{flex:1,padding:"14px 8px",borderRadius:10,border:`1.5px solid ${payMethod===id?C.navy:C.border}`,background:payMethod===id?C.navy:C.white,cursor:"pointer",textAlign:"center",transition:"all 0.15s"}}>
-                  <div style={{marginBottom:6}}>{icon}</div>
-                  <div style={{fontSize:11,fontWeight:700,color:payMethod===id?C.white:C.textSec}}>{label}</div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
-
-        <Btn full onClick={()=>{setParentPaySetup(true);nav("parentDash")}} disabled={selectedPlan===null||!payMethod}>
-          {selectedPlan===0?"Pay Now":"Set Up Payment Plan"}
-        </Btn>
-      </div>
-    </div>
-  );
-
-  // ═══ PARENT DASHBOARD ═══
-  if(screen==="parentDash") {
-    const plan = selectedPlan!==null?PLANS[selectedPlan]:PLANS[3];
-    const instAmt = plan.installments===1?parentTotal:Math.ceil(parentTotal/plan.installments);
-    const made = plan.installments===1?1:5;
-    const total = plan.installments;
-
-    return (
-      <div style={{minHeight:"100vh",background:C.bg}}>
-        <div style={{background:C.gradient,padding:"20px 24px 68px"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <div>
-              <div style={{color:"rgba(255,255,255,0.4)",fontSize:12,fontWeight:700,letterSpacing:"0.06em",textTransform:"uppercase"}}>{teamName||"Eastside Thunder 14U"}</div>
-              <div style={{color:C.white,fontSize:22,fontWeight:900,letterSpacing:"-0.02em",marginTop:4}}>Hi, {parentName.split(" ")[0]}</div>
-            </div>
-            <div style={{display:"flex",gap:8}}>
-              <div style={{width:40,height:40,borderRadius:10,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.1)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}><Icon name="bell" size={18} color="rgba(255,255,255,0.6)"/></div>
-              <div onClick={()=>{}} style={{cursor:"pointer"}}><Avatar name={parentName} size={40} src={parentPhoto}/></div>
-            </div>
-          </div>
-        </div>
-
-        <div style={{padding:"0 20px",marginTop:-48}}>
-          <Card style={{marginBottom:14,padding:22}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
-              <div>
-                <div style={{...T.caption,marginBottom:4}}>My Progress</div>
-                <div style={{fontSize:30,fontWeight:900,letterSpacing:"-0.03em"}}>{fmt(parentPaid)}</div>
-                <div style={{fontSize:13,color:C.textMuted,fontWeight:600}}>of {fmt(parentTotal)}</div>
-              </div>
-              <Badge label={plan.installments===1?"Paid":`${made}/${total}`} color={made===total?C.green:C.accent} bg={made===total?C.greenBg:C.accentGlow}/>
-            </div>
-            <Progress value={parentPaid} max={parentTotal} height={8} color={C.green}/>
-            {plan.installments>1&&(
-              <div style={{display:"flex",justifyContent:"space-between",marginTop:10,fontSize:12,color:C.textMuted,fontWeight:600}}>
-                <span>Next: {fmt(instAmt)} · Mar 1</span><span>{total-made} left</span>
-              </div>
-            )}
-          </Card>
-
-          <TabBar tabs={[{id:"dashboard",label:"Home"},{id:"calendar",label:"Calendar"},{id:"polls",label:"Polls"},{id:"fund",label:"Fund"}]} active={pTab} onSelect={setPTab}/>
-
-          {pTab==="dashboard"&&(
-            <div>
-              <Card style={{marginBottom:10,padding:16}}>
-                <div style={{display:"flex",alignItems:"center",gap:12}}>
-                  <Avatar name={mgrName||"Mike Johnson"} size={44}/>
-                  <div style={{flex:1}}>
-                    <div style={{fontWeight:700,fontSize:14}}>{mgrName||"Coach Mike Johnson"}</div>
-                    <div style={{fontSize:12,color:C.textMuted,fontWeight:500}}>Team Manager · {mgrPhone||"(555) 012-3456"}</div>
-                  </div>
-                  <div style={{display:"flex",gap:6}}>
-                    <a href={`tel:${mgrPhone}`} style={{width:36,height:36,borderRadius:8,background:C.bg,border:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="phone" size={15} color={C.steel}/></a>
-                    <a href={`mailto:${mgrEmail}`} style={{width:36,height:36,borderRadius:8,background:C.bg,border:`1px solid ${C.border}`,display:"flex",alignItems:"center",justifyContent:"center"}}><Icon name="mail" size={15} color={C.steel}/></a>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Hardship options — subtle link, not prominent */}
-              <div style={{display:"flex",justifyContent:"center",gap:16,marginBottom:14,padding:"6px 0"}}>
-                <button onClick={()=>setHardshipOpt(!hardshipOpt)} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:C.textMuted,fontWeight:600,display:"flex",alignItems:"center",gap:4}}>
-                  <Icon name="heart" size={13} color={C.textMuted}/> Help a teammate
-                </button>
-                <span style={{color:C.border}}>|</span>
-                <button onClick={()=>setShowHardship(!showHardship)} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:C.textMuted,fontWeight:600,display:"flex",alignItems:"center",gap:4}}>
-                  <Icon name="shield" size={13} color={C.textMuted}/> Need assistance?
-                </button>
-              </div>
-
-              {hardshipOpt&&(
-                <Card className="fade-in" style={{marginBottom:14,background:C.offWhite,border:`1px solid ${C.accent}25`}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
-                    <Icon name="heart" size={16} color={C.accent}/>
-                    <span style={{fontWeight:800,fontSize:14}}>Help a Family in Need</span>
-                  </div>
-                  <p style={{fontSize:13,color:C.textSec,marginBottom:14,lineHeight:1.5,fontWeight:500}}>Anonymous contribution for teammates facing hardship. Only charged during end-of-season reconciliation if needed.</p>
-                  <div style={{display:"flex",gap:6,marginBottom:14}}>
-                    {["50","100","150"].map(amt=>(
-                      <button key={amt} onClick={()=>setHardshipAmt(amt)} style={{flex:1,padding:"10px 0",border:`1.5px solid ${hardshipAmt===amt?C.navy:C.border}`,borderRadius:8,background:hardshipAmt===amt?C.navy:"transparent",color:hardshipAmt===amt?C.white:C.textSec,fontWeight:700,fontSize:14,cursor:"pointer"}}>${amt}</button>
-                    ))}
-                  </div>
-                  <Btn variant="accent" full small>Pledge {fmt(parseInt(hardshipAmt))}</Btn>
-                </Card>
-              )}
-
-              {showHardship&&(
-                <Card className="fade-in" style={{marginBottom:14,background:C.orangeBg,border:`1px solid ${C.orange}25`}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-                    <Icon name="shield" size={16} color={C.orange}/>
-                    <span style={{fontWeight:800,fontSize:14}}>Hardship Assistance</span>
-                  </div>
-                  <p style={{fontSize:13,color:C.textSec,marginBottom:12,lineHeight:1.5,fontWeight:500}}>Available for 8-payment plans with 2+ late/missed payments. May be used up to twice per season. Completely anonymous.</p>
-                  <Btn full small variant="outline" disabled>Not Currently Eligible</Btn>
-                  <div style={{fontSize:11,color:C.textMuted,marginTop:8,textAlign:"center",fontWeight:600}}>Requires: 8-pay plan + 2 missed payments</div>
-                </Card>
-              )}
-
-              {plan.installments>1&&(
-                <Card style={{marginBottom:14}}>
-                  <div style={{fontWeight:800,fontSize:15,marginBottom:14}}>Payment Schedule</div>
-                  {Array.from({length:plan.installments}).map((_,i)=>(
-                    <div key={i} style={{display:"flex",alignItems:"center",padding:"10px 0",borderBottom:i<plan.installments-1?`1px solid ${C.borderLight}`:"none"}}>
-                      <div style={{width:24,height:24,borderRadius:6,background:i<made?C.greenBg:i===made?C.accentGlow:C.bg,display:"flex",alignItems:"center",justifyContent:"center",marginRight:12,border:i>=made?`1px solid ${C.border}`:"none"}}>
-                        {i<made?<Icon name="check" size={13} color={C.green}/>:<span style={{fontSize:10,fontWeight:800,color:i===made?C.accent:C.textMuted}}>{i+1}</span>}
-                      </div>
-                      <div style={{flex:1,fontSize:13,color:i<made?C.textMuted:C.text,fontWeight:i===made?700:500}}>
-                        Payment {i+1}{i===made&&<span style={{marginLeft:8}}><Badge label="Next"/></span>}
-                      </div>
-                      <span style={{fontWeight:700,fontSize:13,color:i<made?C.green:C.text}}>{fmt(instAmt)}</span>
-                    </div>
-                  ))}
-                </Card>
-              )}
-            </div>
-          )}
-
-          {pTab==="calendar"&&(
-            <div>
-              <div style={{fontWeight:800,fontSize:17,marginBottom:14}}>Team Calendar</div>
-              {sortedEvents.length===0&&<Card style={{textAlign:"center",padding:32,color:C.textMuted}}><Icon name="calendar" size={32} color={C.border}/><div style={{marginTop:12,fontWeight:600}}>No events scheduled</div></Card>}
-              {sortedEvents.map(ev=>(
-                <Card key={ev.id} style={{marginBottom:8,padding:"14px 16px",borderLeft:`4px solid ${eventTypeColor(ev.type)}`}}>
-                  <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
-                    <div style={{width:44,minHeight:44,borderRadius:10,background:`${eventTypeColor(ev.type)}15`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",flexShrink:0,padding:"4px 0"}}>
-                      <div style={{fontSize:10,fontWeight:700,color:eventTypeColor(ev.type),textTransform:"uppercase"}}>{fmtEventDate(ev.date).split(" ")[0]}</div>
-                      <div style={{fontSize:18,fontWeight:900,color:eventTypeColor(ev.type),lineHeight:1}}>{ev.date.split("-")[2]}</div>
-                    </div>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
-                        <div style={{fontWeight:700,fontSize:14}}>{ev.title}</div>
-                        <Badge label={eventTypeLabel(ev.type)} color={eventTypeColor(ev.type)} bg={`${eventTypeColor(ev.type)}15`}/>
-                      </div>
-                      <div style={{fontSize:12,color:C.textMuted,fontWeight:500,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
-                        {ev.time&&<><Icon name="clock" size={11} color={C.textMuted}/> {ev.time}</>}
-                        {ev.location&&<><span style={{color:C.border}}>·</span><Icon name="mapPin" size={11} color={C.textMuted}/> {ev.location}</>}
-                      </div>
-                      {ev.notes&&<div style={{fontSize:12,color:C.textSec,marginTop:4,fontWeight:500,background:C.offWhite,padding:"6px 10px",borderRadius:6,border:`1px solid ${C.borderLight}`}}>{ev.notes}</div>}
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-
-          {pTab==="polls"&&(
-            <div>
-              <div style={{fontWeight:800,fontSize:17,marginBottom:14}}>Team Polls</div>
-              {polls.filter(p=>p.active).length===0&&polls.filter(p=>!p.active).length===0&&<Card style={{textAlign:"center",padding:32,color:C.textMuted}}><Icon name="poll" size={32} color={C.border}/><div style={{marginTop:12,fontWeight:600}}>No polls yet</div></Card>}
-              {polls.filter(p=>p.active).map(p=>{
-                const totalV = p.options.reduce((s,o)=>s+o.votes,0);
-                return (
-                  <Card key={p.id} style={{marginBottom:10,padding:18}}>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                      <div style={{fontWeight:800,fontSize:15,flex:1}}>{p.question}</div>
-                      <Badge label="Vote" color={p.voted?C.green:C.accent} bg={p.voted?C.greenBg:C.accentGlow}/>
-                    </div>
-                    {p.options.map((o,oi)=>{
-                      const pct = totalV>0?Math.round(o.votes/totalV*100):0;
-                      return (
-                        <div key={oi} onClick={()=>!p.voted&&votePoll(p.id,oi)} style={{marginBottom:8,cursor:p.voted?"default":"pointer",padding:"10px 14px",borderRadius:10,border:`1.5px solid ${p.voted?C.borderLight:C.border}`,background:p.voted?C.offWhite:C.white,transition:"all 0.15s",position:"relative",overflow:"hidden"}}>
-                          {p.voted&&<div style={{position:"absolute",left:0,top:0,bottom:0,width:`${pct}%`,background:`${C.accent}10`,transition:"width 0.3s"}}/>}
-                          <div style={{display:"flex",justifyContent:"space-between",position:"relative",zIndex:1}}>
-                            <span style={{fontSize:14,fontWeight:600,color:C.text}}>{o.text}</span>
-                            {p.voted&&<span style={{fontSize:13,fontWeight:700,color:C.accent}}>{pct}%</span>}
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div style={{fontSize:11,color:C.textMuted,marginTop:6,fontWeight:600}}>{p.voted?"You voted":"Tap to vote"} · {totalV} vote{totalV!==1?"s":""}</div>
-                  </Card>
-                );
-              })}
-              {polls.filter(p=>!p.active).length>0&&(
-                <div>
-                  <div style={{...T.caption,margin:"16px 0 10px",fontSize:11}}>Closed Polls</div>
-                  {polls.filter(p=>!p.active).map(p=>{
-                    const totalV = p.options.reduce((s,o)=>s+o.votes,0);
-                    const winner = [...p.options].sort((a,b)=>b.votes-a.votes)[0];
-                    return (
-                      <Card key={p.id} style={{marginBottom:8,padding:14,background:C.offWhite}}>
-                        <div style={{fontWeight:700,fontSize:13,marginBottom:6}}>{p.question}</div>
-                        <div style={{fontSize:12,color:C.textSec,fontWeight:600}}>Result: {winner.text} ({totalV>0?Math.round(winner.votes/totalV*100):0}%) · {totalV} votes</div>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {pTab==="fund"&&(
-            <div>
-              <Card style={{marginBottom:14,padding:22}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-                  <div style={{fontWeight:800,fontSize:17}}>Team Slush Fund</div>
-                  <Badge label="Live" color={C.green} bg={C.greenBg}/>
-                </div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:14}}>
-                  <div><div style={{...T.caption,marginBottom:4}}>Total Fund</div><div style={{fontSize:22,fontWeight:900,letterSpacing:"-0.02em"}}>{fmt(totalFund)}</div></div>
-                  <div><div style={{...T.caption,marginBottom:4}}>Spent</div><div style={{fontSize:22,fontWeight:900,color:C.green,letterSpacing:"-0.02em"}}>{fmt(totalSpent)}</div></div>
-                </div>
-                <Progress value={totalSpent} max={totalFund} height={6}/>
-                <div style={{fontSize:12,color:C.textMuted,marginTop:8,fontWeight:600}}>{fmt(totalFund-totalSpent)} remaining</div>
-              </Card>
-              {DEMO_TXNS.map(t=>(
-                <Card key={t.id} style={{marginBottom:6,padding:"14px 16px"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:12}}>
-                    <CatIcon cat={t.category}/>
-                    <div style={{flex:1}}>
-                      <div style={{fontWeight:700,fontSize:14}}>{t.desc}</div>
-                      <div style={{fontSize:12,color:C.textMuted,marginTop:3,fontWeight:500}}>{t.date}</div>
-                    </div>
-                    <div style={{fontWeight:800,fontSize:14}}>-{fmt(t.amount)}</div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-
-          {pTab==="profile"&&(
-            <div>
-              <Card style={{marginBottom:14,padding:24,textAlign:"center"}}>
-                <div style={{position:"relative",display:"inline-block"}}>
-                  <Avatar name={parentName} size={72} src={parentPhoto}/>
-                  <input type="file" accept="image/*" ref={photoInputRef} style={{display:"none"}} onChange={e=>handlePhotoUpload(e,setParentPhoto)}/>
-                  <div onClick={()=>photoInputRef.current?.click()} style={{position:"absolute",bottom:-4,right:-4,width:28,height:28,borderRadius:8,background:C.navy,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",border:`2px solid ${C.white}`}}>
-                    <Icon name="camera" size={14} color={C.white}/>
-                  </div>
-                </div>
-                <div style={{fontWeight:800,fontSize:18,marginTop:12}}>{parentName}</div>
-                <div style={{color:C.textMuted,fontSize:13,fontWeight:500}}>Parent of {parentChild}</div>
-                <div style={{marginTop:16,display:"flex",gap:8,justifyContent:"center"}}>
-                  <Btn variant="outline" small>Edit Profile</Btn>
-                  <Btn variant="outline" small><Icon name="users" size={13} color={C.text}/> Invite Family</Btn>
-                </div>
-              </Card>
-              <Card style={{padding:18,marginBottom:14}}>
-                <div style={{fontWeight:800,fontSize:14,marginBottom:14}}>Payment Method</div>
-                <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 0",borderBottom:`1px solid ${C.borderLight}`}}>
-                  <Icon name={payMethod==="ach"?"bank":"creditCard"} size={20} color={C.steel}/>
-                  <div style={{flex:1}}>
-                    <div style={{fontWeight:700,fontSize:14}}>{payMethod==="card"?"Visa ••4242":payMethod==="debit"?"Debit ••8821":"Chase ••6789"}</div>
-                    <div style={{fontSize:12,color:C.textMuted,fontWeight:500}}>{payMethod==="ach"?"ACH Bank Transfer":"Card on file"}</div>
-                  </div>
-                  <Badge label="Active" color={C.green} bg={C.greenBg}/>
-                </div>
-              </Card>
-              <Card style={{padding:18}}>
-                <div style={{fontWeight:800,fontSize:14,marginBottom:14}}>Notifications</div>
-                {[{label:"Email Alerts",val:notifEmail,set:setNotifEmail},{label:"SMS Alerts",val:notifSMS,set:setNotifSMS},{label:"Payment Reminders",val:notifPay,set:setNotifPay}].map((s,i)=>(
-                  <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:i<2?`1px solid ${C.borderLight}`:"none"}}>
-                    <span style={{fontSize:14,fontWeight:600}}>{s.label}</span>
-                    <div onClick={()=>s.set(!s.val)} style={{width:44,height:24,borderRadius:12,background:s.val?C.navy:C.border,padding:2,cursor:"pointer",transition:"background 0.15s"}}>
-                      <div style={{width:20,height:20,borderRadius:10,background:C.white,boxShadow:C.shadow1,transform:s.val?"translateX(20px)":"translateX(0)",transition:"all 0.15s"}}/>
-                    </div>
-                  </div>
-                ))}
-              </Card>
-            </div>
-          )}
-        </div>
-
-        <div style={{position:"fixed",bottom:0,left:0,right:0,background:C.white,borderTop:`1px solid ${C.border}`,display:"flex",padding:"8px 0 20px",justifyContent:"space-around",zIndex:50}}>
-          {[{icon:"home",label:"Home",tab:"dashboard"},{icon:"calendar",label:"Calendar",tab:"calendar"},{icon:"poll",label:"Polls",tab:"polls"},{icon:"chart",label:"Fund",tab:"fund"},{icon:"settings",label:"Profile",tab:"profile"}].map(n=>(
-            <button key={n.tab} onClick={()=>setPTab(n.tab)} style={{background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"4px 8px"}}>
-              <Icon name={n.icon} size={20} color={pTab===n.tab?C.navy:C.textMuted}/>
-              <span style={{fontSize:9,fontWeight:700,color:pTab===n.tab?C.navy:C.textMuted}}>{n.label}</span>
-            </button>
-          ))}
-        </div>
-        <div style={{height:80}}/>
-      </div>
-    );
-  }
-
   return null;
-}
+};
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
 </html>
