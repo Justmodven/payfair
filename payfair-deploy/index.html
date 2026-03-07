@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>PayFair — Team Finance</title>
+<meta name="description" content="The modern platform for youth sports team slush funds"/>
+<meta name="theme-color" content="#18181B"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body,#root{height:100%;width:100%;font-family:-apple-system,BlinkMacSystemFont,"Inter","SF Pro Display","Helvetica Neue",Arial,sans-serif;background:#FFFFFF;color:#18181B;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+input,textarea,select,button{font-family:inherit;outline:none}
+::-webkit-scrollbar{display:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes slideUpModal{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.af{animation:fadeIn .3s ease}.as{animation:slideUp .4s ease}.am{animation:slideUpModal .3s ease}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback}=React;
+
+/* ══════════════════════════════════════════════════
+   DESIGN SYSTEM — Figma Make + PayFair Fintech DNA
+   ══════════════════════════════════════════════════ */
+const C={
+  bg:'#FFFFFF',bgSec:'#F9FAFB',bgDark:'#18181B',bgDarker:'#0F0F12',bgCard:'#FFFFFF',bgCardDark:'#2E2F33',
+  text:'#18181B',textSec:'#52525B',textMuted:'#A1A1AA',white:'#FFFFFF',
+  accent:'#E7FF57',accentDark:'#D4EC4A',
+  teal:'#00D4AA',cyan:'#00B4D8',
+  green:'#10B981',red:'#EF4444',orange:'#F59E0B',blue:'#3B82F6',purple:'#8B5CF6',
+  border:'rgba(0,0,0,0.08)',borderDark:'rgba(255,255,255,0.08)',
+  gold:'#C9B037',goldLight:'#F5E6A0',goldDark:'#D4AF37',
+};
+
+/* ══════════════════════════════════════════════════
+   ICONS
+   ══════════════════════════════════════════════════ */
+const icons={
+  home:"M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z M9 22V12h6v10",
+  calendar:"M16 2v4 M8 2v4 M3 10h18 M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z",
+  poll:"M18 20V10 M12 20V4 M6 20v-6",
+  users:"M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2 M9 11a4 4 0 100-8 4 4 0 000 8z M23 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75",
+  more:"M12 13a1 1 0 100-2 1 1 0 000 2z M19 13a1 1 0 100-2 1 1 0 000 2z M5 13a1 1 0 100-2 1 1 0 000 2z",
+  dollar:"M12 1v22 M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6",
+  bell:"M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 01-3.46 0",
+  settings:"M12 15a3 3 0 100-6 3 3 0 000 6z",
+  plus:"M12 5v14 M5 12h14",
+  check:"M20 6L9 17l-5-5",
+  chevRight:"M9 18l6-6-6-6",
+  x:"M18 6L6 18 M6 6l12 12",
+  send:"M22 2L11 13 M22 2l-7 20-4-9-9-4z",
+  heart:"M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z",
+  shield:"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+  mapPin:"M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z M12 13a3 3 0 100-6 3 3 0 000 6z",
+  eye:"M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 15a3 3 0 100-6 3 3 0 000 6z",
+  wifi:"M5 12.55a11 11 0 0114.08 0 M1.42 9a16 16 0 0121.16 0 M8.53 16.11a6 6 0 016.95 0 M12 20h.01",
+  arrowRight:"M5 12h14 M12 5l7 7-7 7",
+  creditCard:"M1 4h22v16H1z M1 10h22",
+  messageCircle:"M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z",
+  target:"M12 22a10 10 0 100-20 10 10 0 000 20z M12 18a6 6 0 100-12 6 6 0 000 12z M12 14a2 2 0 100-4 2 2 0 000 4z",
+  trophy:"M6 9H4.5a2.5 2.5 0 010-5H6 M18 9h1.5a2.5 2.5 0 000-5H18 M4 22h16 M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22 M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22 M18 2H6v7a6 6 0 0012 0V2z",
+  activity:"M22 12h-4l-3 9L9 3l-3 9H2",
+  user:"M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2 M12 11a4 4 0 100-8 4 4 0 000 8z",
+};
+
+const Icon=({name,size=20,color=C.text,style:s={}})=>(
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={s}>
+    {(icons[name]||"").split(" M").map((d,i)=><path key={i} d={i===0?d:"M"+d}/>)}
+  </svg>
+);
+
+/* ══════════════════════════════════════════════════
+   SHARED UI COMPONENTS
+   ══════════════════════════════════════════════════ */
+const Btn=({children,variant="primary",small,full,onClick,disabled,style:s={}})=>{
+  const base={display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6,borderRadius:10,fontWeight:600,cursor:disabled?'not-allowed':'pointer',transition:'all 0.2s',border:'none',fontSize:small?13:15,padding:small?'8px 16px':'14px 24px',width:full?'100%':'auto',opacity:disabled?0.4:1};
+  const v={primary:{...base,background:C.accent,color:C.text},dark:{...base,background:C.bgDark,color:C.white},outline:{...base,background:'transparent',border:'1px solid '+C.border,color:C.text},ghost:{...base,background:'transparent',color:C.textSec},danger:{...base,background:C.red,color:C.white}};
+  return <button onClick={disabled?undefined:onClick} style={{...(v[variant]||v.primary),...s}}>{children}</button>;
+};
+
+const Card=({children,dark,style:s={},onClick})=>(
+  <div onClick={onClick} style={{background:dark?C.bgDark:C.bgCard,borderRadius:16,padding:20,border:dark?'none':'1px solid '+C.border,boxShadow:dark?'none':'0 1px 3px rgba(0,0,0,0.06)',cursor:onClick?'pointer':'default',transition:'all 0.2s',...s}}>{children}</div>
+);
+
+const Badge=({children,color=C.green,bg})=>(
+  <span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:600,background:bg||(color+'15'),color}}>{children}</span>
+);
+
+const Avatar=({name,size=40})=>{
+  const i=name?name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase():'?';
+  const colors=['#E7FF57','#00D4AA','#00B4D8','#F59E0B','#8B5CF6','#EF4444'];
+  const c=colors[name?name.length%colors.length:0];
+  return <div style={{width:size,height:size,borderRadius:size,background:c,display:'flex',alignItems:'center',justifyContent:'center',fontSize:size*.36,fontWeight:700,color:C.text,flexShrink:0}}>{i}</div>;
+};
+
+const Modal=({children,onClose,title,subtitle})=>(
+  <div style={{position:'fixed',inset:0,zIndex:100,display:'flex',alignItems:'flex-end',justifyContent:'center'}} className="af">
+    <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.5)',backdropFilter:'blur(4px)'}} onClick={onClose}/>
+    <div className="am" style={{position:'relative',background:C.bg,borderRadius:'24px 24px 0 0',width:'100%',maxWidth:428,maxHeight:'90vh',overflow:'auto',paddingBottom:32}}>
+      <div style={{padding:'20px 24px 0',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,background:C.bg,zIndex:1,paddingBottom:16,borderBottom:'1px solid '+C.border}}>
+        <div><div style={{fontSize:18,fontWeight:700}}>{title}</div>{subtitle&&<div style={{fontSize:13,color:C.textMuted,marginTop:2}}>{subtitle}</div>}</div>
+        <button onClick={onClose} style={{width:32,height:32,borderRadius:32,background:C.bgSec,border:'none',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}><Icon name="x" size={16} color={C.textSec}/></button>
+      </div>
+      <div style={{padding:'20px 24px'}}>{children}</div>
+    </div>
+  </div>
+);
+
+const ProgressBar=({value,max=100,color=C.accent,height=6,bg=C.bgSec})=>(
+  <div style={{height,borderRadius:height,background:bg,overflow:'hidden',width:'100%'}}>
+    <div style={{height:'100%',borderRadius:height,background:color,width:Math.min(value/max*100,100)+'%',transition:'width 0.6s ease'}}/>
+  </div>
+);
+
+const InputField=({label,value,onChange,placeholder,type="text",icon})=>(
+  <div style={{marginBottom:16}}>
+    {label&&<label style={{fontSize:12,fontWeight:600,color:C.textSec,marginBottom:6,display:'block',textTransform:'uppercase',letterSpacing:'0.05em'}}>{label}</label>}
+    <div style={{position:'relative'}}>
+      {icon&&<div style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)'}}><Icon name={icon} size={16} color={C.textMuted}/></div>}
+      <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} style={{width:'100%',padding:'14px 16px',paddingLeft:icon?42:16,borderRadius:12,border:'1px solid '+C.border,background:C.bg,fontSize:15,color:C.text,transition:'border-color 0.2s'}} onFocus={e=>e.target.style.borderColor=C.accent} onBlur={e=>e.target.style.borderColor=C.border}/>
+    </div>
+  </div>
+);
+
+/* ══════════════════════════════════════════════════
+   VIRTUAL CARD — Amex Black Card
+   ══════════════════════════════════════════════════ */
+const VirtualCard=({balance=0,show=false,onToggle})=>(
+  <div onClick={onToggle} style={{background:'linear-gradient(145deg,#1A1A2E 0%,#0D0D1A 30%,#16162A 60%,#0A0A14 100%)',borderRadius:20,padding:'28px 26px',color:C.white,position:'relative',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.06)',cursor:'pointer',minHeight:210}}>
+    <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,rgba(255,255,255,0.03) 0%,transparent 40%,rgba(255,255,255,0.02) 70%,transparent 100%)'}}/>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',position:'relative',marginBottom:24}}>
+      <div style={{display:'flex',alignItems:'center',gap:12}}>
+        <div style={{width:44,height:32,borderRadius:5,background:'linear-gradient(135deg,'+C.gold+' 0%,'+C.goldDark+' 40%,'+C.goldLight+' 50%,'+C.goldDark+' 60%,'+C.gold+' 100%)',boxShadow:'inset 0 1px 2px rgba(255,255,255,0.3),0 1px 3px rgba(0,0,0,0.3)',position:'relative'}}>
+          <div style={{position:'absolute',inset:4,display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:1}}>{[...Array(6)].map((_,i)=><div key={i} style={{background:'rgba(0,0,0,0.15)',borderRadius:1}}/>)}</div>
+        </div>
+        <Icon name="wifi" size={18} color="rgba(255,255,255,0.3)" style={{transform:'rotate(90deg)'}}/>
+      </div>
+      <div style={{fontSize:20,fontWeight:900,letterSpacing:'0.08em',background:'linear-gradient(135deg,'+C.gold+' 0%,'+C.goldLight+' 50%,'+C.gold+' 100%)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>PF</div>
+    </div>
+    <div style={{position:'relative'}}>
+      <div style={{fontSize:11,fontWeight:500,color:'rgba(255,255,255,0.4)',textTransform:'uppercase',letterSpacing:'0.12em',marginBottom:4}}>Available Balance</div>
+      <div style={{fontSize:34,fontWeight:800,letterSpacing:'-0.02em',background:'linear-gradient(135deg,rgba(255,255,255,0.95),rgba(255,255,255,0.7))',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
+        ${balance.toLocaleString('en-US',{minimumFractionDigits:2})}
+      </div>
+    </div>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:20,position:'relative'}}>
+      <div style={{fontSize:13,letterSpacing:'0.15em',color:'rgba(255,255,255,0.35)',fontWeight:500}}>{show?'4242 8888 1234 5678':'•••• •••• •••• 5678'}</div>
+      <div style={{padding:'5px 14px',borderRadius:20,background:'rgba(255,255,255,0.08)',border:'1px solid rgba(255,255,255,0.1)',fontSize:11,color:'rgba(255,255,255,0.5)',fontWeight:600,letterSpacing:'0.05em'}}>{show?'HIDE':'TAP TO REVEAL'}</div>
+    </div>
+  </div>
+);
+
+/* ══════════════════════════════════════════════════
+   STAT CARD, COLLECTION PROGRESS, FAMILY ITEM
+   ══════════════════════════════════════════════════ */
+const StatCard=({label,value,change,dark})=>(
+  <div style={{background:dark?C.bgDark:'#F8F9FA',borderRadius:14,padding:'16px 18px',flex:1,border:dark?'1px solid rgba(255,255,255,0.06)':'1px solid '+C.border}}>
+    <div style={{fontSize:11,fontWeight:600,color:dark?'rgba(255,255,255,0.4)':C.textMuted,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}}>{label}</div>
+    <div style={{fontSize:22,fontWeight:800,color:dark?C.white:C.text,letterSpacing:'-0.02em'}}>{value}</div>
+    {change!=null&&<div style={{fontSize:12,fontWeight:600,color:change>0?C.green:C.red,marginTop:4}}>{change>0?'+':''}{change}%</div>}
+  </div>
+);
+
+const CollectionProgress=({collected=5184,total=7200})=>{
+  const pct=Math.round(collected/total*100);
+  return(<Card><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}><div style={{fontSize:14,fontWeight:600}}>Collection Progress</div><div style={{fontSize:15,fontWeight:700,color:C.green}}>{pct}%</div></div><ProgressBar value={pct} color={C.green} height={8}/><div style={{display:'flex',justifyContent:'space-between',marginTop:8}}><span style={{fontSize:12,color:C.textMuted}}>${collected.toLocaleString()} collected</span><span style={{fontSize:12,color:C.textMuted}}>${total.toLocaleString()} goal</span></div></Card>);
+};
+
+const FamilyItem=({name,player,amount,status,onClick})=>(
+  <div onClick={onClick} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 0',borderBottom:'1px solid '+C.border,cursor:onClick?'pointer':'default'}}>
+    <div style={{display:'flex',alignItems:'center',gap:14}}>
+      <div style={{position:'relative'}}><Avatar name={name} size={44}/><div style={{position:'absolute',bottom:-1,right:-1,width:14,height:14,borderRadius:14,background:status==='paid'?C.green:status==='partial'?C.orange:C.red,border:'2px solid white'}}/></div>
+      <div><div style={{fontSize:15,fontWeight:600}}>{name}</div><div style={{fontSize:12,color:C.textMuted}}>{player}</div></div>
+    </div>
+    <div style={{textAlign:'right'}}><div style={{fontSize:15,fontWeight:700}}>${amount}</div><Badge color={status==='paid'?C.green:status==='partial'?C.orange:C.red}>{status==='paid'?'Paid':status==='partial'?'Partial':'Pending'}</Badge></div>
+  </div>
+);
+
+/* ══════════════════════════════════════════════════
+   PAYMENT PLAN SELECTOR
+   ══════════════════════════════════════════════════ */
+const PaymentPlanSelector=({total=200,selected,onSelect})=>{
+  const plans=[{id:1,n:1,fee:0,label:'Pay in Full',sub:'No convenience fee'},{id:2,n:2,fee:2.99,label:'Split in 2',sub:'2 payments'},{id:4,n:4,fee:3.99,label:'Split in 4',sub:'4 payments'},{id:8,n:8,fee:4.99,label:'Split in 8',sub:'8 payments'}];
+  return(<div style={{display:'flex',flexDirection:'column',gap:10}}>{plans.map(p=>{const tf=p.fee*p.n;const pp=(total+tf)/p.n;const sel=selected===p.id;return(<div key={p.id} onClick={()=>onSelect(p.id)} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 18px',borderRadius:14,border:'2px solid '+(sel?C.accent:C.border),background:sel?C.accent+'08':C.bg,cursor:'pointer',transition:'all 0.2s'}}><div style={{display:'flex',alignItems:'center',gap:14}}><div style={{width:22,height:22,borderRadius:22,border:'2px solid '+(sel?C.accent:C.border),display:'flex',alignItems:'center',justifyContent:'center'}}>{sel&&<div style={{width:12,height:12,borderRadius:12,background:C.accent}}/>}</div><div><div style={{fontSize:15,fontWeight:600}}>{p.label}</div><div style={{fontSize:12,color:C.textMuted}}>{p.sub}{p.fee>0&&' · $'+p.fee+' fee each'}</div></div></div><div style={{textAlign:'right'}}><div style={{fontSize:16,fontWeight:700}}>${pp.toFixed(2)}</div>{p.n>1&&<div style={{fontSize:11,color:C.textMuted}}>x{p.n}</div>}</div></div>);})}</div>);
+};
+
+/* ══════════════════════════════════════════════════
+   BOTTOM NAV
+   ══════════════════════════════════════════════════ */
+const BottomNav=({tabs,active,onTab})=>(
+  <div style={{position:'fixed',bottom:0,left:'50%',transform:'translateX(-50%)',width:'100%',maxWidth:428,background:'rgba(255,255,255,0.95)',backdropFilter:'blur(20px)',borderTop:'1px solid '+C.border,display:'flex',padding:'8px 0 env(safe-area-inset-bottom,8px)',zIndex:50}}>
+    {tabs.map(t=>(
+      <button key={t.id} onClick={()=>onTab(t.id)} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3,padding:'8px 0',background:'none',border:'none',cursor:'pointer'}}>
+        <div style={{width:36,height:36,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',background:active===t.id?C.accent:'transparent',transition:'all 0.2s'}}><Icon name={t.icon} size={20} color={active===t.id?C.text:C.textMuted}/></div>
+        <span style={{fontSize:10,fontWeight:active===t.id?700:500,color:active===t.id?C.text:C.textMuted}}>{t.label}</span>
+      </button>
+    ))}
+  </div>
+);
+
+/* ══════════════════════════════════════════════════
+   DEMO DATA
+   ══════════════════════════════════════════════════ */
+const demoFamilies=[
+  {id:1,name:'Sarah Martinez',player:'Diego (#7)',amount:185,paid:185,status:'paid'},
+  {id:2,name:'Michael Rodriguez',player:'Lucas (#12)',amount:185,paid:185,status:'paid'},
+  {id:3,name:'Jennifer Chen',player:'Tyler (#3)',amount:185,paid:92.50,status:'partial'},
+  {id:4,name:'David Thompson',player:'Emma (#9)',amount:185,paid:46.25,status:'partial'},
+  {id:5,name:'Lisa Johnson',player:'Aiden (#15)',amount:185,paid:0,status:'pending'},
+  {id:6,name:'Robert Wilson',player:'Mia (#21)',amount:185,paid:23.13,status:'partial'},
+];
+const demoEvents=[
+  {id:'e1',title:'Frostbite Classic Tournament',date:'2026-03-14',time:'7:00 AM',location:'IceWorks Rink, Aston PA',type:'tournament',notes:'Full team required. Arrive 45 min early.'},
+  {id:'e2',title:'Practice — Power Play Drills',date:'2026-03-11',time:'6:30 PM',location:'Skate Zone, Voorhees NJ',type:'practice'},
+  {id:'e3',title:'vs. Jersey Shore Titans',date:'2026-03-18',time:'7:15 PM',location:'Igloo Ice Arena, Mount Laurel NJ',type:'game'},
+  {id:'e4',title:'Team Pizza Night',date:'2026-03-20',time:'6:00 PM',location:"Lou's Pizza, Cherry Hill NJ",type:'event'},
+  {id:'e5',title:'Playoffs Round 1',date:'2026-03-28',time:'8:00 PM',location:'Flyers Skate Zone, Pennsauken NJ',type:'game'},
+];
+const demoPolls=[
+  {id:'p1',question:'Team dinner restaurant preference?',options:[{text:'Olive Garden',votes:12},{text:'Chipotle',votes:5},{text:"Chick-fil-A",votes:8}],active:true,totalVoters:25,createdAt:'2026-03-05'},
+  {id:'p2',question:'Charter bus for Frostbite Classic? ($45/family)',options:[{text:'Yes — charter bus',votes:16},{text:"No — we'll drive",votes:6}],active:true,totalVoters:22,createdAt:'2026-03-04'},
+  {id:'p3',question:'Preferred practice time next month?',options:[{text:'5:30 PM',votes:8},{text:'6:30 PM',votes:14},{text:'7:30 PM',votes:3}],active:false,totalVoters:25,createdAt:'2026-03-01',decided:'6:30 PM'},
+];
+const demoMessages=[
+  {id:'m1',from:'Coach Mike',preview:'Great practice today team! Remember to bring...',time:'2h ago',unread:true},
+  {id:'m2',from:'Tournament Director',preview:'Frostbite Classic schedule has been posted...',time:'5h ago',unread:true},
+  {id:'m3',from:'Sarah Martinez',preview:'Diego will miss Tuesday practice due to...',time:'1d ago',unread:false},
+];
+
+/* ══════════════════════════════════════════════════
+   HELPERS
+   ══════════════════════════════════════════════════ */
+const eventTypeColor=t=>({game:C.red,practice:C.blue,tournament:C.orange,event:C.green}[t]||C.textMuted);
+const eventTypeLabel=t=>({game:'Game',practice:'Practice',tournament:'Tournament',event:'Team Event'}[t]||t);
+const fmtDate=d=>{const dt=new Date(d+'T12:00:00');return dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})};
+const getGreeting=()=>{const h=new Date().getHours();return h<12?'Good Morning':h<17?'Good Afternoon':'Good Evening'};
+
+/* ══════════════════════════════════════════════════
+   APP
+   ══════════════════════════════════════════════════ */
+const App=()=>{
+  const [role,setRole]=useState(null);
+  const [mTab,setMTab]=useState('home');
+  const [pTab,setPTab]=useState('home');
+  const [showCard,setShowCard]=useState(false);
+  const [modal,setModal]=useState(null);
+  const [families]=useState(demoFamilies);
+  const [events,setEvents]=useState(demoEvents);
+  const [polls,setPolls]=useState(demoPolls);
+  const [messages]=useState(demoMessages);
+  const [parentPlan,setParentPlan]=useState(0);
+  const parentPaid=92.50,parentTotal=185;
+  const [pollQuestion,setPollQuestion]=useState('');
+  const [pollOptions,setPollOptions]=useState(['','']);
+  const [evTitle,setEvTitle]=useState('');
+  const [evDate,setEvDate]=useState('');
+  const [evTime,setEvTime]=useState('');
+  const [evLocation,setEvLocation]=useState('');
+  const [evType,setEvType]=useState('practice');
+  const [evNotes,setEvNotes]=useState('');
+  const [frTitle,setFrTitle]=useState('');
+  const [frAmount,setFrAmount]=useState('');
+  const [frDue,setFrDue]=useState('');
+  const [frCategory,setFrCategory]=useState('equipment');
+  const totalCollected=families.reduce((s,f)=>s+f.paid,0);
+  const totalGoal=families.reduce((s,f)=>s+f.amount,0);
+  const sortedEvents=[...events].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const mgrTabs=[{id:'home',label:'Home',icon:'home'},{id:'calendar',label:'Calendar',icon:'calendar'},{id:'decisions',label:'Decisions',icon:'poll'},{id:'families',label:'Families',icon:'users'},{id:'more',label:'More',icon:'more'}];
+  const parentTabs=[{id:'home',label:'Home',icon:'home'},{id:'calendar',label:'Calendar',icon:'calendar'},{id:'polls',label:'Polls',icon:'poll'},{id:'fund',label:'Fund',icon:'dollar'},{id:'profile',label:'Profile',icon:'user'}];
+
+  const createPoll=()=>{if(!pollQuestion||pollOptions.filter(o=>o.trim()).length<2)return;setPolls([{id:'p'+Date.now(),question:pollQuestion,options:pollOptions.filter(o=>o.trim()).map(t=>({text:t,votes:0})),active:true,totalVoters:families.length,createdAt:new Date().toISOString().split('T')[0]},...polls]);setPollQuestion('');setPollOptions(['','']);setModal(null)};
+  const createEvent=()=>{if(!evTitle||!evDate)return;setEvents([{id:'e'+Date.now(),title:evTitle,date:evDate,time:evTime,location:evLocation,type:evType,notes:evNotes},...events]);setEvTitle('');setEvDate('');setEvTime('');setEvLocation('');setEvType('practice');setEvNotes('');setModal(null)};
+
+  /* ═══ SPLASH ═══ */
+  if(!role)return(
+    <div style={{minHeight:'100vh',background:C.bgDark,display:'flex',alignItems:'center',justifyContent:'center',padding:24}} className="af">
+      <div style={{maxWidth:400,width:'100%',textAlign:'center'}}>
+        <div style={{width:64,height:64,borderRadius:16,background:C.accent,margin:'0 auto 24px',display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{fontSize:28,fontWeight:900,color:C.text}}>PF</span></div>
+        <h1 style={{fontSize:32,fontWeight:300,color:C.white,letterSpacing:'-0.02em',marginBottom:8}}>PayFair</h1>
+        <p style={{color:'rgba(255,255,255,0.5)',fontSize:14,marginBottom:48}}>Team Finance Platform</p>
+        <div style={{background:C.bgCardDark,border:'1px solid rgba(255,255,255,0.05)',borderRadius:16,padding:24,marginBottom:16,textAlign:'left'}}>
+          <h2 style={{color:C.white,fontSize:18,fontWeight:400,marginBottom:12}}>Welcome</h2>
+          <p style={{color:'rgba(255,255,255,0.5)',fontSize:13,lineHeight:1.6,marginBottom:16}}>Manage team finances, track payments, and coordinate with families — all in one place.</p>
+          {['Manage team budgets and expenses','Track family payment progress','Coordinate schedules and events'].map((t,i)=><div key={i} style={{display:'flex',alignItems:'center',gap:10,marginBottom:6}}><div style={{width:4,height:4,borderRadius:4,background:C.accent,flexShrink:0}}/><span style={{color:'rgba(255,255,255,0.4)',fontSize:12}}>{t}</span></div>)}
+        </div>
+        <button onClick={()=>setRole('manager')} style={{width:'100%',padding:16,borderRadius:12,background:C.white,color:C.text,border:'none',fontSize:15,fontWeight:600,cursor:'pointer',marginBottom:12,display:'flex',alignItems:'center',justifyContent:'center',gap:10}}>
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M19.6 10.23c0-.71-.06-1.39-.18-2.05H10v3.87h5.38a4.6 4.6 0 01-2 3.02v2.51h3.23c1.89-1.74 2.98-4.3 2.98-7.35z" fill="#4285F4"/><path d="M10 20c2.7 0 4.96-.9 6.62-2.42l-3.23-2.51c-.9.6-2.04.95-3.39.95-2.6 0-4.81-1.76-5.59-4.12H1.06v2.59A10 10 0 0010 20z" fill="#34A853"/><path d="M4.4 11.9c-.2-.6-.31-1.24-.31-1.9s.11-1.3.31-1.9V5.51H1.06A10 10 0 000 10c0 1.61.39 3.14 1.06 4.49l3.35-2.59z" fill="#FBBC05"/><path d="M10 3.98c1.47 0 2.79.5 3.82 1.5l2.87-2.87C14.96.99 12.7 0 10 0 6.09 0 2.71 2.24 1.06 5.51l3.35 2.59C5.19 5.74 7.4 3.98 10 3.98z" fill="#EA4335"/></svg>
+          Sign in as Team Manager
+        </button>
+        <button onClick={()=>setRole('parent')} style={{width:'100%',padding:16,borderRadius:12,background:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.8)',border:'1px solid rgba(255,255,255,0.1)',fontSize:15,fontWeight:500,cursor:'pointer'}}>I'm a Parent / Family Member</button>
+        <p style={{color:'rgba(255,255,255,0.25)',fontSize:11,marginTop:24}}>Secure authentication powered by Google</p>
+      </div>
+    </div>
+  );
+
+  /* ═══ EVENT DETAIL MODAL (shared) ═══ */
+  const EventDetailModal=()=>modal&&modal.type==='eventDetail'?(
+    <Modal title={modal.event.title} subtitle={fmtDate(modal.event.date)+' · '+modal.event.time} onClose={()=>setModal(null)}>
+      <Badge color={eventTypeColor(modal.event.type)}>{eventTypeLabel(modal.event.type)}</Badge>
+      {modal.event.location&&<div style={{marginTop:16,padding:16,borderRadius:12,background:C.bgSec}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}><Icon name="mapPin" size={16} color={C.textSec}/><span style={{fontSize:14,fontWeight:500}}>{modal.event.location}</span></div>
+        <a href={'https://maps.google.com/?q='+encodeURIComponent(modal.event.location)} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:6,padding:'10px 16px',borderRadius:10,background:C.bgDark,color:C.white,fontSize:13,fontWeight:600,textDecoration:'none'}}><Icon name="arrowRight" size={14} color={C.white}/> Get Directions</a>
+      </div>}
+      {modal.event.notes&&<div style={{marginTop:16,padding:14,borderRadius:12,border:'1px solid '+C.border}}><div style={{fontSize:12,fontWeight:600,color:C.textMuted,marginBottom:4}}>Notes</div><div style={{fontSize:14,color:C.textSec}}>{modal.event.notes}</div></div>}
+    </Modal>
+  ):null;
+
+  /* ═══ MESSAGES MODAL (shared) ═══ */
+  const MessagesModal=()=>modal==='messages'?(
+    <Modal title="Messages" onClose={()=>setModal(null)}>
+      {messages.map(m=><div key={m.id} style={{display:'flex',gap:12,padding:'14px 0',borderBottom:'1px solid '+C.border}}><Avatar name={m.from} size={40}/><div style={{flex:1}}><div style={{display:'flex',justifyContent:'space-between'}}><span style={{fontSize:14,fontWeight:m.unread?700:500}}>{m.from}</span><span style={{fontSize:11,color:C.textMuted}}>{m.time}</span></div><div style={{fontSize:13,color:C.textSec,marginTop:2}}>{m.preview}</div></div>{m.unread&&<div style={{width:8,height:8,borderRadius:8,background:C.accent,flexShrink:0,marginTop:6}}/>}</div>)}
+    </Modal>
+  ):null;
+
+  /* ═══ MANAGER ═══ */
+  if(role==='manager')return(
+    <div style={{maxWidth:428,margin:'0 auto',minHeight:'100vh',background:C.bg,position:'relative'}}>
+      <div style={{padding:'16px 20px 12px',display:'flex',justifyContent:'space-between',alignItems:'center',position:'sticky',top:0,background:'rgba(255,255,255,0.95)',backdropFilter:'blur(20px)',zIndex:40}}>
+        <div><div style={{fontSize:12,color:C.textMuted,fontWeight:500}}>{getGreeting()}</div><div style={{fontSize:20,fontWeight:700}}>Team Manager</div></div>
+        <div style={{display:'flex',gap:8}}>
+          <button onClick={()=>setModal('notify')} style={{width:40,height:40,borderRadius:12,background:C.bgSec,border:'none',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',position:'relative'}}><Icon name="bell" size={18} color={C.textSec}/><div style={{position:'absolute',top:8,right:8,width:8,height:8,borderRadius:8,background:C.red,border:'2px solid white'}}/></button>
+          <button onClick={()=>setModal('action')} style={{width:40,height:40,borderRadius:12,background:C.accent,border:'none',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}><Icon name="plus" size={18} color={C.text}/></button>
+        </div>
+      </div>
+      <div style={{padding:'0 20px 100px',paddingTop:8}}>
+
+        {mTab==='home'&&<div className="af">
+          <VirtualCard balance={totalCollected} show={showCard} onToggle={()=>setShowCard(!showCard)}/>
+          <div style={{display:'flex',gap:10,marginTop:16}}><StatCard label="Total Fund" value={'$'+totalGoal.toLocaleString()} change={12.5} dark/><StatCard label="Spent" value={'$'+(totalGoal-totalCollected).toLocaleString()} change={-8.2} dark/><StatCard label="Remaining" value={'$'+totalCollected.toLocaleString()} change={4.3} dark/></div>
+          <div style={{marginTop:20}}><CollectionProgress collected={totalCollected} total={totalGoal}/></div>
+          <div style={{marginTop:24}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}><div style={{fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:C.textMuted}}>Team Families</div><button onClick={()=>setMTab('families')} style={{fontSize:12,fontWeight:600,color:C.textSec,background:'none',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>View All <Icon name="chevRight" size={14} color={C.textSec}/></button></div>{families.slice(0,4).map(f=><FamilyItem key={f.id} name={f.name} player={f.player} amount={f.paid} status={f.status}/>)}</div>
+          <div style={{display:'flex',justifyContent:'center',gap:16,marginTop:20,padding:'8px 0'}}><button style={{background:'none',border:'none',cursor:'pointer',fontSize:12,color:C.textMuted,display:'flex',alignItems:'center',gap:4}}><Icon name="heart" size={13} color={C.textMuted}/> Help a teammate</button><span style={{color:C.border}}>|</span><button style={{background:'none',border:'none',cursor:'pointer',fontSize:12,color:C.textMuted,display:'flex',alignItems:'center',gap:4}}><Icon name="shield" size={13} color={C.textMuted}/> Need assistance?</button></div>
+        </div>}
+
+        {mTab==='calendar'&&<div className="af"><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}><div style={{fontSize:18,fontWeight:700}}>Calendar</div><Btn variant="primary" small onClick={()=>setModal('event')}><Icon name="plus" size={14}/> New Event</Btn></div>{sortedEvents.map(ev=><Card key={ev.id} style={{marginBottom:12,padding:16}} onClick={()=>setModal({type:'eventDetail',event:ev})}><div style={{display:'flex',alignItems:'flex-start',gap:14}}><div style={{width:48,height:48,borderRadius:12,background:eventTypeColor(ev.type)+'15',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon name={ev.type==='game'?'target':ev.type==='tournament'?'trophy':'calendar'} size={20} color={eventTypeColor(ev.type)}/></div><div style={{flex:1}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}><div><div style={{fontSize:15,fontWeight:600}}>{ev.title}</div><div style={{fontSize:12,color:C.textMuted,marginTop:2}}>{fmtDate(ev.date)} · {ev.time}</div></div><Badge color={eventTypeColor(ev.type)}>{eventTypeLabel(ev.type)}</Badge></div>{ev.location&&<div style={{fontSize:12,color:C.textSec,marginTop:6,display:'flex',alignItems:'center',gap:4}}><Icon name="mapPin" size={12} color={C.textMuted}/>{ev.location}</div>}</div></div></Card>)}</div>}
+
+        {mTab==='decisions'&&<div className="af"><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}><div><div style={{fontSize:18,fontWeight:700}}>Decisions</div><div style={{fontSize:13,color:C.textMuted}}>Poll your team, then make the call.</div></div><Btn variant="primary" small onClick={()=>setModal('poll')}><Icon name="plus" size={14}/> New</Btn></div>
+          {polls.filter(p=>p.active).map(p=>{const totalV=p.options.reduce((s,o)=>s+o.votes,0);const rs=families.length||6;const rr=Math.min(Math.round(totalV/rs*100),100);const sorted=[...p.options].sort((a,b)=>b.votes-a.votes);const leader=sorted[0];const lp=totalV>0?Math.round(leader.votes/totalV*100):0;const decisive=lp>=60&&rr>=50;return(<Card key={p.id} style={{marginTop:16,padding:20}}><div style={{fontSize:15,fontWeight:600,marginBottom:4}}>{p.question}</div><div style={{fontSize:12,color:C.textMuted,marginBottom:16}}>Created {p.createdAt}</div><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}><span style={{fontSize:12,fontWeight:600,color:C.textSec}}>{totalV} of {rs} families responded</span><span style={{fontSize:12,fontWeight:700,color:rr>=50?C.green:C.orange}}>{rr}%</span></div><ProgressBar value={rr} color={rr>=50?C.green:C.orange} height={4}/><div style={{marginTop:16,display:'flex',flexDirection:'column',gap:10}}>{p.options.map((opt,i)=>{const pct=totalV>0?Math.round(opt.votes/totalV*100):0;const isL=opt.text===leader.text&&totalV>0;return(<div key={i}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}><div style={{display:'flex',alignItems:'center',gap:6}}>{isL&&<div style={{width:8,height:8,borderRadius:8,background:C.green}}/>}<span style={{fontSize:14,fontWeight:isL?700:500,color:isL?C.text:C.textSec}}>{opt.text}</span></div><span style={{fontSize:isL?18:14,fontWeight:isL?800:600,color:isL?C.text:C.textMuted}}>{pct}%</span></div><ProgressBar value={pct} color={isL?C.teal:'#E4E4E7'} height={6}/></div>)})}</div><div style={{marginTop:16,padding:'12px 16px',borderRadius:10,background:(decisive?C.green:C.orange)+'10',display:'flex',justifyContent:'space-between',alignItems:'center'}}><span style={{fontSize:13,fontWeight:600,color:decisive?C.green:C.orange}}>{decisive?'Clear leader — ready to decide':'Waiting for more responses...'}</span>{decisive&&<Btn variant="dark" small onClick={()=>setPolls(polls.map(pp=>pp.id===p.id?{...pp,active:false,decided:leader.text}:pp))}>Decide</Btn>}</div></Card>)})}
+          {polls.filter(p=>!p.active).length>0&&<div style={{marginTop:28}}><div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.1em',color:C.textMuted,marginBottom:12}}>Decided</div>{polls.filter(p=>!p.active).map(p=><Card key={p.id} style={{marginBottom:10,padding:16,opacity:0.7}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><div><div style={{fontSize:14,fontWeight:600}}>{p.question}</div><div style={{fontSize:12,color:C.green,fontWeight:600,marginTop:2}}>✓ {p.decided}</div></div><Badge color={C.green}>Done</Badge></div></Card>)}</div>}
+        </div>}
+
+        {mTab==='families'&&<div className="af"><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}><div style={{fontSize:18,fontWeight:700}}>Families</div><Btn variant="outline" small><Icon name="plus" size={14}/> Add</Btn></div><div style={{display:'flex',gap:8,marginBottom:20}}><Badge color={C.green}>{families.filter(f=>f.status==='paid').length} Paid</Badge><Badge color={C.orange}>{families.filter(f=>f.status==='partial').length} Partial</Badge><Badge color={C.red}>{families.filter(f=>f.status==='pending').length} Pending</Badge></div>{families.map(f=><FamilyItem key={f.id} name={f.name} player={f.player} amount={f.paid} status={f.status}/>)}</div>}
+
+        {mTab==='more'&&<div className="af"><div style={{fontSize:18,fontWeight:700,marginBottom:20}}>More</div>{[{icon:'messageCircle',label:'Messages',badge:messages.filter(m=>m.unread).length,action:()=>setModal('messages')},{icon:'users',label:'Manage Roster',action:()=>setMTab('families')},{icon:'dollar',label:'Request Funds',action:()=>setModal('fund')},{icon:'activity',label:'Transaction History',action:()=>setMTab('home')},{icon:'settings',label:'Team Settings',action:()=>alert('Team settings — coming soon')},{icon:'shield',label:'Hardship Fund',action:()=>alert('Hardship assistance — coming soon')}].map((item,i)=><button key={i} onClick={item.action} style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 0',background:'none',border:'none',borderBottom:'1px solid '+C.border,cursor:'pointer'}}><div style={{display:'flex',alignItems:'center',gap:14}}><div style={{width:40,height:40,borderRadius:12,background:C.bgSec,display:'flex',alignItems:'center',justifyContent:'center'}}><Icon name={item.icon} size={18} color={C.textSec}/></div><span style={{fontSize:15,fontWeight:500,color:C.text}}>{item.label}</span></div><div style={{display:'flex',alignItems:'center',gap:8}}>{item.badge>0&&<div style={{width:20,height:20,borderRadius:20,background:C.red,color:C.white,fontSize:11,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center'}}>{item.badge}</div>}<Icon name="chevRight" size={16} color={C.textMuted}/></div></button>)}<button onClick={()=>setRole(null)} style={{width:'100%',padding:16,marginTop:24,borderRadius:12,background:C.bgSec,border:'none',color:C.textSec,fontSize:14,fontWeight:500,cursor:'pointer'}}>Switch Role / Sign Out</button></div>}
+      </div>
+      <BottomNav tabs={mgrTabs} active={mTab} onTab={setMTab}/>
+
+      {modal==='action'&&<Modal title="Quick Actions" subtitle="What would you like to do?" onClose={()=>setModal(null)}><div style={{display:'flex',flexDirection:'column',gap:10}}>{[{icon:'send',label:'Send Message',sub:'Message families or admins',action:()=>setModal('messages')},{icon:'calendar',label:'Create Event',sub:'Add to team calendar',action:()=>setModal('event')},{icon:'dollar',label:'Request Funds',sub:'Send payment request',action:()=>setModal('fund')},{icon:'poll',label:'New Decision',sub:'Poll the team',action:()=>setModal('poll')},{icon:'users',label:'Manage Roster',sub:'Add or edit players',action:()=>setModal(null)}].map((a,i)=><button key={i} onClick={a.action} style={{display:'flex',alignItems:'center',gap:14,padding:16,borderRadius:14,background:C.bgSec,border:'none',cursor:'pointer',width:'100%',textAlign:'left'}}><div style={{width:44,height:44,borderRadius:12,background:C.accent+'20',display:'flex',alignItems:'center',justifyContent:'center'}}><Icon name={a.icon} size={20} color={C.text}/></div><div><div style={{fontSize:15,fontWeight:600}}>{a.label}</div><div style={{fontSize:12,color:C.textMuted}}>{a.sub}</div></div></button>)}</div></Modal>}
+
+      {modal==='poll'&&<Modal title="New Decision" subtitle="Poll your team to make the call" onClose={()=>setModal(null)}><InputField label="Question" value={pollQuestion} onChange={setPollQuestion} placeholder="What do you need to decide?" icon="messageCircle"/><div style={{fontSize:12,fontWeight:600,color:C.textSec,marginBottom:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>Options</div>{pollOptions.map((opt,i)=><div key={i} style={{display:'flex',gap:8,marginBottom:8}}><input value={opt} onChange={e=>{const o=[...pollOptions];o[i]=e.target.value;setPollOptions(o)}} placeholder={'Option '+(i+1)} style={{flex:1,padding:'12px 14px',borderRadius:10,border:'1px solid '+C.border,fontSize:14}}/>{i>1&&<button onClick={()=>setPollOptions(pollOptions.filter((_,j)=>j!==i))} style={{width:40,borderRadius:10,background:C.bgSec,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}><Icon name="x" size={14} color={C.textMuted}/></button>}</div>)}{pollOptions.length<5&&<button onClick={()=>setPollOptions([...pollOptions,''])} style={{width:'100%',padding:10,borderRadius:10,border:'1px dashed '+C.border,background:'none',cursor:'pointer',fontSize:13,color:C.textMuted,marginBottom:20}}>+ Add option</button>}<Btn variant="primary" full onClick={createPoll} disabled={!pollQuestion||pollOptions.filter(o=>o.trim()).length<2}><Icon name="send" size={16}/> Push to Team</Btn></Modal>}
+
+      {modal==='event'&&<Modal title="Create Event" subtitle="Add to team calendar" onClose={()=>setModal(null)}><div style={{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap'}}>{['practice','game','tournament','event'].map(t=><button key={t} onClick={()=>setEvType(t)} style={{padding:'8px 14px',borderRadius:20,border:'1px solid '+(evType===t?eventTypeColor(t):C.border),background:evType===t?eventTypeColor(t)+'15':'transparent',fontSize:13,fontWeight:evType===t?600:400,color:evType===t?eventTypeColor(t):C.textSec,cursor:'pointer'}}>{eventTypeLabel(t)}</button>)}</div><InputField label="Event Title" value={evTitle} onChange={setEvTitle} placeholder="e.g., Practice — Power Play Drills"/><div style={{display:'flex',gap:10}}><div style={{flex:1}}><InputField label="Date" value={evDate} onChange={setEvDate} type="date"/></div><div style={{flex:1}}><InputField label="Time" value={evTime} onChange={setEvTime} type="time"/></div></div><InputField label="Location" value={evLocation} onChange={setEvLocation} placeholder="Venue name and address" icon="mapPin"/><InputField label="Notes" value={evNotes} onChange={setEvNotes} placeholder="Any additional details"/><Btn variant="primary" full onClick={createEvent} disabled={!evTitle||!evDate}>Create Event</Btn></Modal>}
+
+      {modal==='fund'&&<Modal title="Request Funds" subtitle="Send payment request to families" onClose={()=>setModal(null)}><InputField label="Title" value={frTitle} onChange={setFrTitle} placeholder="e.g., Tournament Entry Fee"/><InputField label="Amount per family" value={frAmount} onChange={setFrAmount} placeholder="$0.00" type="number" icon="dollar"/><InputField label="Due Date" value={frDue} onChange={setFrDue} type="date"/><div style={{fontSize:12,fontWeight:600,color:C.textSec,marginBottom:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>Category</div><div style={{display:'flex',gap:8,marginBottom:20,flexWrap:'wrap'}}>{['equipment','tournament','travel','uniforms','facility','other'].map(c=><button key={c} onClick={()=>setFrCategory(c)} style={{padding:'8px 14px',borderRadius:20,border:'1px solid '+(frCategory===c?C.accent:C.border),background:frCategory===c?C.accent+'15':'transparent',fontSize:13,fontWeight:frCategory===c?600:400,color:frCategory===c?C.text:C.textSec,cursor:'pointer',textTransform:'capitalize'}}>{c}</button>)}</div>{frAmount&&<div style={{padding:14,borderRadius:12,background:C.accent+'10',marginBottom:20}}><div style={{fontSize:12,color:C.textSec}}>Total collection from {families.length} families</div><div style={{fontSize:22,fontWeight:800}}>${(parseFloat(frAmount||0)*families.length).toFixed(2)}</div></div>}<Btn variant="primary" full disabled={!frTitle||!frAmount} onClick={()=>{setFrTitle('');setFrAmount('');setFrDue('');setFrCategory('equipment');setModal(null)}}>Send Request</Btn></Modal>}
+
+      {modal==='notify'&&<Modal title="Notifications" subtitle="3 new updates" onClose={()=>setModal(null)}>{[{icon:'dollar',text:'Sarah Martinez paid $185.00',sub:'Tournament Fee — Paid in full',time:'2h ago',color:C.green},{icon:'calendar',text:'Frostbite Classic — schedule posted',sub:'March 14, 7:00 AM · IceWorks Rink',time:'5h ago',color:C.orange},{icon:'poll',text:'2 new poll responses received',sub:'Team dinner restaurant preference',time:'1d ago',color:C.blue}].map((n,i)=><div key={i} style={{display:'flex',gap:12,padding:'14px 0',borderBottom:'1px solid '+C.border}}><div style={{width:40,height:40,borderRadius:12,background:n.color+'15',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon name={n.icon} size={18} color={n.color}/></div><div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{n.text}</div><div style={{fontSize:12,color:C.textMuted,marginTop:2}}>{n.sub}</div></div><span style={{fontSize:11,color:C.textMuted,flexShrink:0}}>{n.time}</span></div>)}</Modal>}
+
+      <MessagesModal/><EventDetailModal/>
+    </div>
+  );
+
+  /* ═══ PARENT ═══ */
+  if(role==='parent')return(
+    <div style={{maxWidth:428,margin:'0 auto',minHeight:'100vh',background:C.bg,position:'relative'}}>
+      <div style={{padding:'16px 20px 12px',display:'flex',justifyContent:'space-between',alignItems:'center',position:'sticky',top:0,background:'rgba(255,255,255,0.95)',backdropFilter:'blur(20px)',zIndex:40}}>
+        <div><div style={{fontSize:12,color:C.textMuted,fontWeight:500}}>{getGreeting()}</div><div style={{fontSize:20,fontWeight:700}}>Jennifer Chen</div></div>
+        <button onClick={()=>setModal('parentNotify')} style={{width:40,height:40,borderRadius:12,background:C.bgSec,border:'none',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',position:'relative'}}><Icon name="bell" size={18} color={C.textSec}/><div style={{position:'absolute',top:8,right:8,width:8,height:8,borderRadius:8,background:C.red,border:'2px solid white'}}/></button>
+      </div>
+      <div style={{padding:'0 20px 100px',paddingTop:8}}>
+
+        {pTab==='home'&&<div className="af">
+          <Card dark style={{marginBottom:16}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:16}}><div><div style={{fontSize:11,fontWeight:600,color:'rgba(255,255,255,0.4)',textTransform:'uppercase',letterSpacing:'0.1em'}}>Slush Fund Balance</div><div style={{fontSize:32,fontWeight:800,color:C.white,marginTop:4}}>${parentTotal.toFixed(2)}</div></div><Badge color={C.orange} bg="rgba(245,158,11,0.15)">2 of 4 paid</Badge></div><ProgressBar value={parentPaid} max={parentTotal} color={C.accent} height={8} bg="rgba(255,255,255,0.1)"/><div style={{display:'flex',justifyContent:'space-between',marginTop:8}}><span style={{fontSize:12,color:'rgba(255,255,255,0.4)'}}>${parentPaid.toFixed(2)} paid</span><span style={{fontSize:12,color:'rgba(255,255,255,0.4)'}}>${(parentTotal-parentPaid).toFixed(2)} remaining</span></div><div style={{marginTop:16,padding:'12px 16px',borderRadius:10,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',display:'flex',justifyContent:'space-between',alignItems:'center'}}><div><div style={{fontSize:12,color:'rgba(255,255,255,0.5)'}}>Next payment due</div><div style={{fontSize:15,fontWeight:700,color:C.white}}>$46.25 · Mar 15</div></div><Btn variant="primary" small onClick={()=>setPTab('fund')}>Pay Now</Btn></div></Card>
+          <div style={{display:'flex',gap:10,marginBottom:20}}>{[{icon:'calendar',label:'Calendar',action:()=>setPTab('calendar')},{icon:'poll',label:'Polls',action:()=>setPTab('polls')},{icon:'dollar',label:'Payments',action:()=>setPTab('fund')},{icon:'messageCircle',label:'Messages',action:()=>setModal('messages')}].map((a,i)=><button key={i} onClick={a.action} style={{flex:1,padding:'16px 0',borderRadius:14,background:C.bgSec,border:'none',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:6}}><Icon name={a.icon} size={20} color={C.textSec}/><span style={{fontSize:11,fontWeight:600,color:C.textSec}}>{a.label}</span></button>)}</div>
+          <div style={{fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:C.textMuted,marginBottom:12}}>Upcoming Events</div>{sortedEvents.slice(0,3).map(ev=><div key={ev.id} style={{display:'flex',alignItems:'center',gap:14,padding:'12px 0',borderBottom:'1px solid '+C.border}}><div style={{width:40,height:40,borderRadius:10,background:eventTypeColor(ev.type)+'15',display:'flex',alignItems:'center',justifyContent:'center'}}><Icon name="calendar" size={16} color={eventTypeColor(ev.type)}/></div><div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{ev.title}</div><div style={{fontSize:12,color:C.textMuted}}>{fmtDate(ev.date)} · {ev.time}</div></div></div>)}
+          <div style={{display:'flex',justifyContent:'center',gap:16,marginTop:24,padding:'8px 0'}}><button style={{background:'none',border:'none',cursor:'pointer',fontSize:12,color:C.textMuted,display:'flex',alignItems:'center',gap:4}}><Icon name="heart" size={13} color={C.textMuted}/> Help a teammate</button><span style={{color:C.border}}>|</span><button style={{background:'none',border:'none',cursor:'pointer',fontSize:12,color:C.textMuted,display:'flex',alignItems:'center',gap:4}}><Icon name="shield" size={13} color={C.textMuted}/> Need assistance?</button></div>
+        </div>}
+
+        {pTab==='calendar'&&<div className="af"><div style={{fontSize:18,fontWeight:700,marginBottom:20}}>Team Calendar</div>{sortedEvents.map(ev=><Card key={ev.id} style={{marginBottom:12,padding:16}} onClick={()=>setModal({type:'eventDetail',event:ev})}><div style={{display:'flex',alignItems:'center',gap:14}}><div style={{width:44,height:44,borderRadius:12,background:eventTypeColor(ev.type)+'15',display:'flex',alignItems:'center',justifyContent:'center'}}><Icon name={ev.type==='game'?'target':'calendar'} size={18} color={eventTypeColor(ev.type)}/></div><div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{ev.title}</div><div style={{fontSize:12,color:C.textMuted}}>{fmtDate(ev.date)} · {ev.time}</div>{ev.location&&<div style={{fontSize:12,color:C.textSec,marginTop:2,display:'flex',alignItems:'center',gap:4}}><Icon name="mapPin" size={11} color={C.textMuted}/>{ev.location}</div>}</div><Badge color={eventTypeColor(ev.type)}>{eventTypeLabel(ev.type)}</Badge></div></Card>)}</div>}
+
+        {pTab==='polls'&&<div className="af"><div style={{fontSize:18,fontWeight:700,marginBottom:4}}>Team Polls</div><div style={{fontSize:13,color:C.textMuted,marginBottom:20}}>Help your manager make the best decisions.</div>{polls.filter(p=>p.active).map(p=>{const totalV=p.options.reduce((s,o)=>s+o.votes,0);return(<Card key={p.id} style={{marginBottom:14,padding:18}}><div style={{fontSize:15,fontWeight:600,marginBottom:14}}>{p.question}</div><div style={{display:'flex',flexDirection:'column',gap:8}}>{p.options.map((opt,i)=><button key={i} onClick={()=>setPolls(polls.map(pp=>pp.id===p.id?{...pp,options:pp.options.map((o,j)=>j===i?{...o,votes:o.votes+1}:o)}:pp))} style={{display:'flex',alignItems:'center',gap:10,padding:'14px 16px',borderRadius:12,border:'1px solid '+C.border,background:C.bg,cursor:'pointer',width:'100%',textAlign:'left'}}><div style={{width:20,height:20,borderRadius:20,border:'2px solid '+C.border,flexShrink:0}}/><span style={{fontSize:14,fontWeight:500}}>{opt.text}</span></button>)}</div><div style={{fontSize:12,color:C.textMuted,marginTop:10}}>{totalV} votes so far</div></Card>)})}{polls.filter(p=>!p.active).map(p=><Card key={p.id} style={{marginBottom:10,padding:16,opacity:0.6}}><div style={{fontSize:14,fontWeight:600}}>{p.question}</div><div style={{fontSize:12,color:C.green,fontWeight:600,marginTop:4}}>✓ Decided: {p.decided}</div></Card>)}</div>}
+
+        {pTab==='fund'&&<div className="af"><div style={{fontSize:18,fontWeight:700,marginBottom:4}}>Payment Plan</div><div style={{fontSize:13,color:C.textMuted,marginBottom:20}}>Tyler (#3) — Team Illinois AAA</div><Card style={{marginBottom:20,padding:20}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:16}}><div><div style={{fontSize:12,color:C.textMuted}}>Total due</div><div style={{fontSize:28,fontWeight:800}}>${parentTotal.toFixed(2)}</div></div><div style={{textAlign:'right'}}><div style={{fontSize:12,color:C.textMuted}}>Paid so far</div><div style={{fontSize:28,fontWeight:800,color:C.green}}>${parentPaid.toFixed(2)}</div></div></div><ProgressBar value={parentPaid} max={parentTotal} color={C.green} height={8}/></Card><div style={{fontSize:14,fontWeight:600,marginBottom:12}}>Choose your payment plan</div><PaymentPlanSelector total={parentTotal-parentPaid} selected={parentPlan} onSelect={setParentPlan}/>{parentPlan>0&&<Btn variant="primary" full style={{marginTop:20}} onClick={()=>alert('Payment processing via Stripe — coming soon!')}><Icon name="creditCard" size={16}/> Continue to Payment</Btn>}</div>}
+
+        {pTab==='profile'&&<div className="af"><div style={{fontSize:18,fontWeight:700,marginBottom:20}}>My Account</div><div style={{display:'flex',alignItems:'center',gap:16,marginBottom:24}}><Avatar name="Jennifer Chen" size={64}/><div><div style={{fontSize:18,fontWeight:700}}>Jennifer Chen</div><div style={{fontSize:13,color:C.textMuted}}>jennifer.chen@email.com</div></div></div>{[{icon:'user',label:'Personal Information'},{icon:'creditCard',label:'Payment Methods'},{icon:'bell',label:'Notification Preferences'},{icon:'shield',label:'Privacy & Security'},{icon:'messageCircle',label:'Help & Support'}].map((item,i)=><button key={i} style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 0',background:'none',border:'none',borderBottom:'1px solid '+C.border,cursor:'pointer'}}><div style={{display:'flex',alignItems:'center',gap:14}}><div style={{width:40,height:40,borderRadius:12,background:C.bgSec,display:'flex',alignItems:'center',justifyContent:'center'}}><Icon name={item.icon} size={18} color={C.textSec}/></div><span style={{fontSize:15,fontWeight:500,color:C.text}}>{item.label}</span></div><Icon name="chevRight" size={16} color={C.textMuted}/></button>)}<button onClick={()=>setRole(null)} style={{width:'100%',padding:16,marginTop:24,borderRadius:12,background:C.bgSec,border:'none',color:C.textSec,fontSize:14,fontWeight:500,cursor:'pointer'}}>Sign Out</button></div>}
+      </div>
+      <BottomNav tabs={parentTabs} active={pTab} onTab={setPTab}/>
+
+      {modal==='parentNotify'&&<Modal title="Notifications" subtitle="2 new updates" onClose={()=>setModal(null)}>{[{icon:'dollar',text:'Payment reminder: $46.25 due Mar 15',sub:'Frostbite Classic Tournament Fee',time:'1h ago',color:C.orange},{icon:'calendar',text:'Practice time updated for Tuesday',sub:'Now 6:30 PM at Skate Zone',time:'4h ago',color:C.blue},{icon:'poll',text:'New poll: Team dinner preference',sub:'Vote now to help Coach decide',time:'1d ago',color:C.purple}].map((n,i)=><div key={i} style={{display:'flex',gap:12,padding:'14px 0',borderBottom:'1px solid '+C.border}}><div style={{width:40,height:40,borderRadius:12,background:n.color+'15',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon name={n.icon} size={18} color={n.color}/></div><div style={{flex:1}}><div style={{fontSize:14,fontWeight:600}}>{n.text}</div><div style={{fontSize:12,color:C.textMuted,marginTop:2}}>{n.sub}</div></div><span style={{fontSize:11,color:C.textMuted,flexShrink:0}}>{n.time}</span></div>)}</Modal>}
+
+      <MessagesModal/><EventDetailModal/>
+    </div>
+  );
+  return null;
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
